@@ -2,7 +2,17 @@
   "permissions": {
     "allow": [
       "Bash(gh auth:*)",
-      "Bash(gh repo:*)"
+      "Bash(gh repo:*)",
+      "Bash(file c:/Users/Leo03/Lapin/public/assets/*.png c:/Users/Leo03/Lapin/public/assets/*.jpg c:/Users/Leo03/Lapin/public/assets/*.jpeg c:/Users/Leo03/Lapin/public/assets/*.webp)",
+      "Bash(python3 -c ':*)",
+      "Bash(identify \"C:/Users/Leo03/Lapin/public/assets/bg-night-sky.png\")",
+      "Bash(powershell -Command ':*)",
+      "Bash(python3 -c \"from PIL import Image; print\\('ok'\\)\")",
+      "Bash(python3 -m pip install Pillow -q)",
+      "Bash(node -e \"require\\('sharp'\\)\")",
+      "Bash(node -e ':*)",
+      "Bash(rm \"C:/Users/Leo03/Lapin/public/assets/bg-night-sky.png\")",
+      "Bash(npm uninstall:*)"
     ]
   }
 }

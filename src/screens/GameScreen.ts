@@ -147,11 +147,15 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     icon.alt = '';
     icon.className = 'piece-score-icon';
 
+    const label = document.createElement('span');
+    label.className = 'piece-score-label';
+    label.textContent = `${piece.label} Shard`;
+
     const count = document.createElement('span');
     count.className = 'piece-score-count';
     count.textContent = '0';
 
-    row.append(icon, count);
+    row.append(icon, label, count);
     scoreboard.append(row);
     return { pieceId: piece.id as PieceId, countEl: count, iconEl: icon };
   });
@@ -228,6 +232,11 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     const SHARD_SIZE = 34;
     const FLIGHT_MS = 500;
 
+    if (positions.length > 0) {
+      const rushSe = new Audio('/assets/se/lapin_glitter_stream_then_score_chime.wav');
+      rushSe.play().catch(() => {});
+    }
+
     positions.forEach((pos, index) => {
       const pieceId = currentBoard[pos.row][pos.col];
       const tile = boardMount.querySelector<HTMLButtonElement>(
@@ -292,6 +301,9 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     viewState.moveCount += 1;
     viewState.selectedPosition = null;
 
+    const swapSe = new Audio('/assets/se/lapin_swap_dreamy_pop.wav');
+    swapSe.play().catch(() => {});
+
     const swappedBoard = swapPositions(board, start, target);
     const initialGroups = findMatchGroups(swappedBoard);
 
@@ -332,6 +344,8 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
         kind: 'match-pause',
         groups
       };
+      const matchSe = new Audio('/assets/se/lapin_one_match.wav');
+      matchSe.play().catch(() => {});
       refresh();
       launchCollectShards(matchedPositions, workingBoard);
       await wait(MATCH_PAUSE_MS);
