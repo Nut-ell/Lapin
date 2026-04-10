@@ -32,6 +32,44 @@ const MATCH_PAUSE_MS = 620;
 const CLEAR_STEP_MS = 60;
 const CLEAR_ANIMATION_MS = 240;
 
+const COMBO_LABELS: Record<number, string> = {
+  2: 'Bien !',
+  3: 'Très bien !',
+  4: 'Magnifique !',
+  5: 'Splendide !',
+  6: 'Merveilleux !'
+};
+
+const COMBO_COLORS = [
+  { color: '#f38aa0', glow: 'rgba(243, 138, 160, 0.55)' },
+  { color: '#f3c95a', glow: 'rgba(243, 201, 90, 0.55)' },
+  { color: '#91ca62', glow: 'rgba(145, 202, 98, 0.55)' },
+  { color: '#58c7d4', glow: 'rgba(88, 199, 212, 0.55)' },
+  { color: '#af87f6', glow: 'rgba(175, 135, 246, 0.55)' },
+  { color: '#ff7eb3', glow: 'rgba(255, 126, 179, 0.6)' }
+];
+
+function showComboOverlay(cascades: number) {
+  const text = cascades >= 7 ? 'Parfait !' : COMBO_LABELS[cascades];
+  if (!text) return;
+
+  const { color, glow } = COMBO_COLORS[Math.min(cascades - 2, COMBO_COLORS.length - 1)];
+
+  const overlay = document.createElement('div');
+  overlay.className = 'combo-overlay';
+
+  const label = document.createElement('span');
+  label.className = 'combo-text';
+  label.textContent = text;
+  label.style.setProperty('--combo-color', color);
+  label.style.setProperty('--combo-glow', glow);
+
+  overlay.append(label);
+  document.body.append(overlay);
+
+  overlay.addEventListener('animationend', () => overlay.remove(), { once: true });
+}
+
 function wait(ms: number) {
   return new Promise<void>((resolve) => {
     window.setTimeout(resolve, ms);
@@ -272,6 +310,11 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
         : `Nice! You collected ${cleared} stars.`;
     animationState = { kind: 'idle' };
     isAnimating = false;
+
+    if (cascades >= 2) {
+      showComboOverlay(cascades);
+    }
+
     refresh();
   };
 

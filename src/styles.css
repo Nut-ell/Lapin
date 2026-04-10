@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+
 :root {
   color-scheme: light;
   font-family: "Segoe UI", "Hiragino Sans", sans-serif;
@@ -644,6 +646,52 @@ select {
   100% {
     opacity: 0;
     transform: translate(-50%, -50%) rotate(var(--glint-rotate)) scale(0.82);
+  }
+}
+
+.combo-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.combo-text {
+  font-family: 'Pacifico', cursive;
+  font-size: clamp(3.5rem, 10vw, 9rem);
+  color: var(--combo-color, #f38aa0);
+  text-shadow:
+    4px 4px 0 rgba(255, 255, 255, 0.9),
+    6px 6px 0 rgba(0, 0, 0, 0.06),
+    0 0 48px var(--combo-glow, rgba(243, 138, 160, 0.5));
+  white-space: nowrap;
+  animation: combo-sweep 2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes combo-sweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-55vw) translateY(35vh) rotate(-22deg) scale(0.72);
+  }
+
+  22% {
+    opacity: 1;
+    transform: translateX(-4vw) translateY(2vh) rotate(-22deg) scale(1.06);
+  }
+
+  62% {
+    opacity: 1;
+    transform: translateX(4vw) translateY(-2vh) rotate(-22deg) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(56vw) translateY(-36vh) rotate(-22deg) scale(0.94);
   }
 }
 
