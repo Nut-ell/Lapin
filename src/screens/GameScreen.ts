@@ -1,8 +1,14 @@
-import { createBoardView } from '../components/BoardView';
+import { createBoardView, type BoardAnimationState } from '../components/BoardView';
 import { createButton } from '../components/Button';
 import { createScreenShell } from '../components/ScreenShell';
 import { PRE_GAME_MESSAGE } from '../content/story';
-import { areAdjacent, createInitialBoard, performSwap } from '../game/board';
+import {
+  clearMatches,
+  collapseAndRefill,
+  createInitialBoard,
+  findMatches,
+  swapPositions
+} from '../game/board';
 import type { Position } from '../game/types';
 
 interface GameScreenOptions {
@@ -16,17 +22,27 @@ interface GameViewState {
   statusText: string;
 }
 
-function samePosition(a: Position, b: Position) {
-  return a.row === b.row && a.col === b.col;
+const SWAP_ANIMATION_MS = 180;
+const MATCH_PAUSE_MS = 240;
+const CLEAR_ANIMATION_MS = 220;
+const REFILL_SETTLE_MS = 160;
+
+function wait(ms: number) {
+  return new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
 }
 
 export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElement {
   let board = createInitialBoard();
+  let animationState: BoardAnimationState = { kind: 'idle' };
+  let isAnimating = false;
+
   const viewState: GameViewState = {
     selectedPosition: null,
     starsCollected: 0,
     moveCount: 0,
-    statusText: 'Select one tile, then an adjacent tile, to swap.'
+    statusText: 'Press and drag a piece toward a neighboring tile to swap.'
   };
 
   const body = document.createElement('div');
@@ -49,7 +65,7 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
 
   const hint = document.createElement('p');
   hint.className = 'hint-text';
-  hint.textContent = 'Tap a piece, then tap a neighboring piece to try a swap.';
+  hint.textContent = 'Press and drag a piece toward a neighboring tile to swap.';
 
   const status = document.createElement('p');
   status.className = 'status-text';
@@ -65,13 +81,22 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
       createBoardView({
         board,
         selectedPosition: viewState.selectedPosition,
-        onTileClick: handleTileClick
+        animationState,
+        interactionDisabled: isAnimating,
+        onDragStart: handleDragStart,
+        onSwapAttempt: handleSwapAttempt,
+        onDragEnd: handleDragEnd
       })
     );
   };
 
   const resetBoard = () => {
+    if (isAnimating) {
+      return;
+    }
+
     board = createInitialBoard();
+    animationState = { kind: 'idle' };
     viewState.selectedPosition = null;
     viewState.starsCollected = 0;
     viewState.moveCount = 0;
@@ -79,45 +104,119 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     refresh();
   };
 
-  const handleTileClick = (position: Position) => {
-    if (viewState.selectedPosition === null) {
-      viewState.selectedPosition = position;
-      viewState.statusText = 'Great. Now pick an adjacent tile to swap.';
-      refresh();
+  const animateSwapSequence = async (start: Position, target: Position) => {
+    if (isAnimating) {
       return;
     }
 
-    if (samePosition(viewState.selectedPosition, position)) {
-      viewState.selectedPosition = null;
-      viewState.statusText = 'Selection cleared.';
-      refresh();
-      return;
-    }
-
-    if (!areAdjacent(viewState.selectedPosition, position)) {
-      viewState.selectedPosition = position;
-      viewState.statusText = 'That tile is now selected. Pick an adjacent one next.';
-      refresh();
-      return;
-    }
-
+    isAnimating = true;
     viewState.moveCount += 1;
+    viewState.selectedPosition = null;
 
-    const swapResult = performSwap(board, viewState.selectedPosition, position);
+    const originalBoard = board;
+    const swappedBoard = swapPositions(board, start, target);
+    const initialMatches = findMatches(swappedBoard);
 
-    if (swapResult.validSwap) {
-      board = swapResult.board;
-      viewState.starsCollected += swapResult.cleared;
+    board = swappedBoard;
+    animationState = {
+      kind: 'swap',
+      first: start,
+      second: target
+    };
+    viewState.statusText =
+      initialMatches.length > 0
+        ? "Swap complete. Let's check the match."
+        : 'That swap did not make a match, so it slides back.';
+    refresh();
+    await wait(SWAP_ANIMATION_MS);
+
+    if (initialMatches.length === 0) {
+      board = originalBoard;
+      animationState = {
+        kind: 'swap',
+        first: target,
+        second: start
+      };
+      refresh();
+      await wait(SWAP_ANIMATION_MS);
+
+      animationState = { kind: 'idle' };
+      isAnimating = false;
+      viewState.statusText = 'Press and drag a piece toward a neighboring tile to swap.';
+      refresh();
+      return;
+    }
+
+    let workingBoard = swappedBoard;
+    let matches = initialMatches;
+    let cleared = 0;
+    let cascades = 0;
+
+    while (matches.length > 0) {
+      cascades += 1;
+      animationState = {
+        kind: 'match-pause',
+        matches
+      };
       viewState.statusText =
-        swapResult.cascades > 1
-          ? `Nice! You collected ${swapResult.cleared} stars across ${swapResult.cascades} cascades.`
-          : `Nice! You collected ${swapResult.cleared} stars.`;
-    } else {
-      viewState.statusText = 'That swap did not make a match, so it returned to the original layout.';
+        cascades === 1
+          ? 'Match found. The stars pause for a moment...'
+          : `Cascade ${cascades}. Another match is ready to clear.`;
+      refresh();
+      await wait(MATCH_PAUSE_MS);
+
+      animationState = {
+        kind: 'clearing',
+        matches
+      };
+      viewState.statusText =
+        cascades === 1 ? 'The matched stars are clearing.' : `Cascade ${cascades} is clearing.`;
+      refresh();
+      await wait(CLEAR_ANIMATION_MS);
+
+      cleared += matches.length;
+      workingBoard = collapseAndRefill(clearMatches(workingBoard, matches));
+      board = workingBoard;
+      animationState = { kind: 'idle' };
+      viewState.statusText = 'New pieces fall into place.';
+      refresh();
+      await wait(REFILL_SETTLE_MS);
+
+      matches = findMatches(workingBoard);
+    }
+
+    viewState.starsCollected += cleared;
+    viewState.statusText =
+      cascades > 1
+        ? `Nice! You collected ${cleared} stars across ${cascades} cascades.`
+        : `Nice! You collected ${cleared} stars.`;
+    animationState = { kind: 'idle' };
+    isAnimating = false;
+    refresh();
+  };
+
+  const handleSwapAttempt = (start: Position, target: Position) => {
+    void animateSwapSequence(start, target);
+  };
+
+  const handleDragStart = (position: Position) => {
+    if (isAnimating) {
+      return;
+    }
+
+    viewState.selectedPosition = position;
+    viewState.statusText = 'Great. Hold it and drag toward a neighboring tile.';
+    status.textContent = viewState.statusText;
+  };
+
+  const handleDragEnd = () => {
+    if (isAnimating || viewState.selectedPosition === null) {
+      return;
     }
 
     viewState.selectedPosition = null;
-    refresh();
+    viewState.statusText = 'Press and drag a piece toward a neighboring tile to swap.';
+    status.textContent = viewState.statusText;
   };
 
   body.append(missionCard, stats, hint, status, boardMount);
@@ -143,4 +242,3 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
   refresh();
   return screen;
 }
-
