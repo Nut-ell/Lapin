@@ -5,6 +5,11 @@ export interface Position {
   col: number;
 }
 
+export interface FallTarget {
+  position: Position;
+  dropDistance: number;
+}
+
 export type MatchDirection = 'horizontal' | 'vertical';
 
 export interface MatchGroup {

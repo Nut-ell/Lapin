@@ -1,11 +1,12 @@
 import { PIECE_ASSET_MAP } from '../assets/pieces';
-import type { Board, MatchDirection, MatchGroup, Position } from '../game/types';
+import type { Board, FallTarget, MatchDirection, MatchGroup, Position } from '../game/types';
 
 export type BoardAnimationState =
   | { kind: 'idle' }
   | { kind: 'swap-forward'; first: Position; second: Position }
   | { kind: 'swap-return'; first: Position; second: Position }
   | { kind: 'match-pause'; groups: MatchGroup[] }
+  | { kind: 'refill'; fallTargets: FallTarget[] }
   | { kind: 'clearing'; positions: Position[] };
 
 interface BoardViewOptions {
@@ -16,15 +17,6 @@ interface BoardViewOptions {
   onDragStart: (position: Position) => void;
   onSwapAttempt: (start: Position, target: Position) => void;
   onDragEnd: () => void;
-}
-
-interface GroupOverlayEffect {
-  direction: MatchDirection;
-  startRow: number;
-  startCol: number;
-  rowSpan: number;
-  colSpan: number;
-  delayMs: number;
 }
 
 function isSelected(current: Position, selectedPosition: Position | null) {
@@ -53,9 +45,14 @@ function containsPosition(positions: Position[], target: Position) {
   return positions.some((position) => samePosition(position, target));
 }
 
+function getFallTarget(position: Position, fallTargets: FallTarget[]) {
+  return fallTargets.find((fallTarget) => samePosition(fallTarget.position, position)) ?? null;
+}
+
 function getTileMatchEffects(position: Position, groups: MatchGroup[]) {
   const effects: Array<{
     direction: MatchDirection;
+    index: number;
     delayMs: number;
   }> = [];
 
@@ -68,6 +65,7 @@ function getTileMatchEffects(position: Position, groups: MatchGroup[]) {
 
     effects.push({
       direction: group.direction,
+      index,
       delayMs: index * 60
     });
   });
@@ -75,24 +73,38 @@ function getTileMatchEffects(position: Position, groups: MatchGroup[]) {
   return effects;
 }
 
-function getGroupOverlayEffects(groups: MatchGroup[]): GroupOverlayEffect[] {
-  return groups.map((group, index) => {
-    const rows = group.positions.map((position) => position.row);
-    const cols = group.positions.map((position) => position.col);
-    const startRow = Math.min(...rows);
-    const endRow = Math.max(...rows);
-    const startCol = Math.min(...cols);
-    const endCol = Math.max(...cols);
+function getGlintSpecs(
+  effect: {
+    direction: MatchDirection;
+    index: number;
+    delayMs: number;
+  },
+  effectIndex: number
+) {
+  const horizontalPatterns = [
+    { x: '20%', y: '22%', size: 18, duration: 360, rotate: -12, kind: 'star' },
+    { x: '76%', y: '34%', size: 10, duration: 300, rotate: 22, kind: 'dot' },
+    { x: '46%', y: '18%', size: 14, duration: 340, rotate: 8, kind: 'star' },
+    { x: '68%', y: '72%', size: 16, duration: 390, rotate: -18, kind: 'star' },
+    { x: '28%', y: '78%', size: 8, duration: 280, rotate: 0, kind: 'dot' }
+  ] as const;
 
-    return {
-      direction: group.direction,
-      startRow,
-      startCol,
-      rowSpan: endRow - startRow + 1,
-      colSpan: endCol - startCol + 1,
-      delayMs: index * 70
-    };
-  });
+  const verticalPatterns = [
+    { x: '24%', y: '24%', size: 16, duration: 340, rotate: 12, kind: 'star' },
+    { x: '72%', y: '76%', size: 12, duration: 320, rotate: -20, kind: 'dot' },
+    { x: '24%', y: '52%', size: 14, duration: 360, rotate: -8, kind: 'star' },
+    { x: '74%', y: '24%', size: 18, duration: 400, rotate: 18, kind: 'star' },
+    { x: '48%', y: '78%', size: 8, duration: 280, rotate: 0, kind: 'dot' }
+  ] as const;
+
+  const patterns = effect.direction === 'horizontal' ? horizontalPatterns : verticalPatterns;
+  const baseIndex = (effect.index * 2 + effectIndex) % patterns.length;
+  const altIndex = (baseIndex + 2) % patterns.length;
+
+  return [patterns[baseIndex], patterns[altIndex]].map((pattern, patternIndex) => ({
+    ...pattern,
+    delayMs: effect.delayMs + effectIndex * 45 + patternIndex * 60
+  }));
 }
 
 function getSwapOffset(position: Position, animationState: BoardAnimationState) {
@@ -290,23 +302,6 @@ export function createBoardView({
     }
   };
 
-  if (animationState.kind === 'match-pause') {
-    const overlay = document.createElement('div');
-    overlay.className = 'board-overlay';
-    overlay.setAttribute('aria-hidden', 'true');
-
-    getGroupOverlayEffects(animationState.groups).forEach((effect) => {
-      const beam = document.createElement('span');
-      beam.className = `board-beam board-beam-${effect.direction}`;
-      beam.style.gridRow = `${effect.startRow + 1} / span ${effect.rowSpan}`;
-      beam.style.gridColumn = `${effect.startCol + 1} / span ${effect.colSpan}`;
-      beam.style.setProperty('--beam-delay', `${effect.delayMs}ms`);
-      overlay.append(beam);
-    });
-
-    stage.append(overlay);
-  }
-
   const handlePointerCancel = (event: PointerEvent) => {
     if (!activeDrag || event.pointerId !== activeDrag.pointerId) {
       return;
@@ -358,6 +353,16 @@ export function createBoardView({
         button.classList.add('is-match-ready');
       }
 
+      const fallTarget =
+        animationState.kind === 'refill' ? getFallTarget(position, animationState.fallTargets) : null;
+
+      if (fallTarget) {
+        const normalizedDistance = Math.min(fallTarget.dropDistance, 5);
+        button.classList.add('is-refilling');
+        button.style.setProperty('--fall-lift', `${normalizedDistance * 6}px`);
+        button.style.setProperty('--fall-delay', `${normalizedDistance * 18}ms`);
+      }
+
       if (animationState.kind === 'clearing' && containsPosition(animationState.positions, position)) {
         button.classList.add('is-clearing');
       }
@@ -374,11 +379,23 @@ export function createBoardView({
       const sparkleLayer = document.createElement('span');
       sparkleLayer.className = 'tile-effect-layer';
 
-      matchEffects.forEach((effect) => {
-        const sparkle = document.createElement('span');
-        sparkle.className = `match-sparkle match-sparkle-${effect.direction}`;
-        sparkle.style.setProperty('--sparkle-delay', `${effect.delayMs}ms`);
-        sparkleLayer.append(sparkle);
+      matchEffects.forEach((effect, effectIndex) => {
+        const shimmer = document.createElement('span');
+        shimmer.className = `tile-shimmer tile-shimmer-${effect.direction}`;
+        shimmer.style.setProperty('--shimmer-delay', `${effect.delayMs}ms`);
+        sparkleLayer.append(shimmer);
+
+        getGlintSpecs(effect, effectIndex).forEach((glint) => {
+          const sparkle = document.createElement('span');
+          sparkle.className = `match-glint match-glint-${glint.kind}`;
+          sparkle.style.setProperty('--glint-x', glint.x);
+          sparkle.style.setProperty('--glint-y', glint.y);
+          sparkle.style.setProperty('--glint-size', `${glint.size}px`);
+          sparkle.style.setProperty('--glint-delay', `${glint.delayMs}ms`);
+          sparkle.style.setProperty('--glint-duration', `${glint.duration}ms`);
+          sparkle.style.setProperty('--glint-rotate', `${glint.rotate}deg`);
+          sparkleLayer.append(sparkle);
+        });
       });
 
       button.append(image, hiddenLabel, sparkleLayer);

@@ -1,10 +1,50 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-46 -46 92 92" width="92" height="92">
-  <path d="M0,37 C-5,27 -31,15 -31,-5 A20,20 0 0,1 0,-21 A20,20 0 0,1 31,-5 C31,15 5,27 0,37Z" fill="#7A2242"/>
-  <path d="M0,34 C-4,24 -28,13 -28,-4 A18,18 0 0,1 0,-18 A18,18 0 0,1 28,-4 C28,13 4,24 0,34Z" fill="#D4537E"/>
-  <path d="M0,-18 Q-17,-18 -21,-8 L-14,-2 L0,-2Z" fill="#ED93B1"/>
-  <path d="M0,-18 Q17,-18 21,-8 L14,-2 L0,-2Z" fill="#BC366A"/>
-  <path d="M0,-2 L-13,14 L0,34 L13,14Z" fill="#A82558"/>
-  <path d="M-28,-4 L-13,14 L0,-2 L-21,-8Z" fill="#C04572"/>
-  <path d="M28,-4 L13,14 L0,-2 L21,-8Z" fill="#982050"/>
-  <ellipse cx="-11" cy="-12" rx="5" ry="7" fill="#FACFDF" opacity="0.78" transform="rotate(-20,-11,-12)"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none">
+<defs>
+  <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.18"/>
+  </filter>
+  <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur stdDeviation="6" result="blur"/>
+    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <radialGradient id="shine" cx="30%" cy="24%" r="70%">
+    <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+    <stop offset="22%" stop-color="#ffffff" stop-opacity="0.45"/>
+    <stop offset="48%" stop-color="#ffffff" stop-opacity="0.12"/>
+    <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="edgeGloss" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+    <stop offset="30%" stop-color="#ffffff" stop-opacity="0.28"/>
+    <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+  </linearGradient>
+</defs>
+
+<defs>
+  <linearGradient id="gemFillR" x1="46" y1="38" x2="206" y2="222" gradientUnits="userSpaceOnUse">
+    <stop offset="0%" stop-color="#fff7fb"/>
+    <stop offset="18%" stop-color="#ffd7ea"/>
+    <stop offset="52%" stop-color="#f79fc7"/>
+    <stop offset="82%" stop-color="#d96f9e"/>
+    <stop offset="100%" stop-color="#8a365f"/>
+  </linearGradient>
+</defs>
+<g filter="url(#shadow)">
+  <path d="M128 219c-14-9-84-58-96-111C24 75 47 42 84 42c22 0 37 12 44 26 7-14 22-26 44-26 37 0 60 33 52 66-12 53-82 102-96 111z" fill="url(#gemFillR)" stroke="#fff1f8" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M128 71c-11-17-25-22-39-22-22 0-39 15-46 36 28-9 58-3 85 12V71z" fill="#ffffff" opacity="0.38"/>
+  <path d="M128 97c-26-15-55-21-85-12 6 36 38 74 85 110V97z" fill="#ffb8d7" opacity="0.32"/>
+  <path d="M128 71v126c47-36 80-74 86-112-25-8-58-2-86 12V71z" fill="#cb5689" opacity="0.34"/>
+  <path d="M79 109c14-10 31-15 49-12 18-3 35 2 49 12-11 17-31 26-49 25-18 1-38-8-49-25z" fill="#ffffff" opacity="0.18"/>
+  <ellipse cx="93" cy="84" rx="22" ry="14" transform="rotate(-18 93 84)" fill="#ffffff" opacity="0.68"/>
+  <ellipse cx="114" cy="69" rx="10" ry="6" transform="rotate(-20 114 69)" fill="#ffffff" opacity="0.88"/>
+  <path d="M63 102c15-9 30-13 46-14" stroke="#ffffff" stroke-opacity="0.42" stroke-width="5" stroke-linecap="round"/>
+  <path d="M147 90c17 0 33 4 47 14" stroke="#fff0f7" stroke-opacity="0.36" stroke-width="5" stroke-linecap="round"/>
+</g>
+
+<g opacity="0.95">
+  <path d="M58 58l4 12 12 4-12 4-4 12-4-12-12-4 12-4 4-12z" fill="#fff8d8"/>
+  <path d="M201 72l3 9 9 3-9 3-3 9-3-9-9-3 9-3 3-9z" fill="#fff8d8" opacity="0.85"/>
+  <circle cx="198" cy="175" r="3.5" fill="#ffffff" opacity="0.9"/>
+  <circle cx="64" cy="184" r="2.5" fill="#ffffff" opacity="0.75"/>
+</g>
 </svg>

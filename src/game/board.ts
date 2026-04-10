@@ -1,6 +1,6 @@
 import { PIECE_IDS, type PieceId } from '../assets/pieces';
 import { BOARD_SIZE, MIN_MATCH_LENGTH } from './constants';
-import type { Board, BoardCell, MatchGroup, Position, SwapResult } from './types';
+import type { Board, BoardCell, FallTarget, MatchGroup, Position, SwapResult } from './types';
 
 function randomPieceId(excluded: PieceId[] = []): PieceId {
   const availablePieces = PIECE_IDS.filter((pieceId) => !excluded.includes(pieceId));
@@ -159,6 +159,52 @@ function collapseColumns(board: BoardCell[][]) {
   }
 }
 
+export function collapseAndRefillWithTargets(board: BoardCell[][]): {
+  board: Board;
+  fallTargets: FallTarget[];
+} {
+  const nextBoard = cloneBoard(board);
+  const fallTargets: FallTarget[] = [];
+  const size = nextBoard.length;
+
+  for (let col = 0; col < size; col += 1) {
+    let targetRow = size - 1;
+
+    for (let row = size - 1; row >= 0; row -= 1) {
+      const cell = nextBoard[row][col];
+
+      if (cell === null) {
+        continue;
+      }
+
+      nextBoard[targetRow][col] = cell;
+
+      if (targetRow !== row) {
+        nextBoard[row][col] = null;
+        fallTargets.push({
+          position: { row: targetRow, col },
+          dropDistance: targetRow - row
+        });
+      }
+
+      targetRow -= 1;
+    }
+
+    for (let row = targetRow; row >= 0; row -= 1) {
+      nextBoard[row][col] = randomPieceId();
+      fallTargets.push({
+        position: { row, col },
+        dropDistance: row + 1
+      });
+    }
+  }
+
+  return {
+    board: nextBoard as Board,
+    fallTargets
+  };
+}
+
 export function clearMatches(board: Board, matches: Position[]): BoardCell[][] {
   const nextBoard = cloneBoard(board);
 
@@ -170,9 +216,7 @@ export function clearMatches(board: Board, matches: Position[]): BoardCell[][] {
 }
 
 export function collapseAndRefill(board: BoardCell[][]): Board {
-  const nextBoard = cloneBoard(board);
-  collapseColumns(nextBoard);
-  return nextBoard as Board;
+  return collapseAndRefillWithTargets(board).board;
 }
 
 export function resolveBoard(board: Board): {

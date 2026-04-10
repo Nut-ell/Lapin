@@ -188,16 +188,24 @@ select {
   font-weight: 600;
 }
 
+.board-stage {
+  --board-gap: 2px;
+  --board-padding: 6px;
+  position: relative;
+  overflow: visible;
+}
+
 .board-grid {
-  --board-gap: 10px;
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: var(--board-gap);
-  padding: 14px;
+  padding: var(--board-padding);
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid var(--border);
   touch-action: none;
+  position: relative;
+  z-index: 1;
 }
 
 .board-grid.is-locked {
@@ -216,17 +224,16 @@ select {
   z-index: 0;
   display: grid;
   place-items: center;
-  padding: 10px;
+  padding: 1px;
   border-radius: 20px;
-  border: 1px solid rgba(72, 56, 94, 0.08);
-  background: linear-gradient(180deg, #ffffff 0%, #f7f4ff 100%);
+  border: none;
+  background: transparent;
   cursor: pointer;
   transition:
     transform 180ms ease,
-    box-shadow 160ms ease,
-    border-color 160ms ease,
+    filter 160ms ease,
     opacity 180ms ease,
-    filter 180ms ease;
+    box-shadow 180ms ease;
   transform: translate(
     calc(var(--drag-x) + var(--preview-x)),
     calc(var(--drag-y) + var(--preview-y))
@@ -241,12 +248,13 @@ select {
     calc(var(--drag-x) + var(--preview-x)),
     calc(var(--drag-y) + var(--preview-y) - 2px)
   );
-  box-shadow: 0 14px 24px rgba(88, 74, 124, 0.12);
+  filter: drop-shadow(0 8px 12px rgba(88, 74, 124, 0.12));
 }
 
 .board-tile.is-selected {
-  border-color: #5aaef7;
-  box-shadow: 0 0 0 4px rgba(90, 174, 247, 0.18);
+  filter:
+    drop-shadow(0 0 10px rgba(90, 174, 247, 0.38))
+    drop-shadow(0 0 18px rgba(90, 174, 247, 0.2));
 }
 
 .board-tile.is-grabbed {
@@ -254,15 +262,16 @@ select {
   cursor: grabbing;
   transition:
     transform 58ms ease-out,
-    box-shadow 120ms ease,
-    border-color 120ms ease;
-  box-shadow: 0 18px 36px rgba(88, 74, 124, 0.2);
+    filter 120ms ease;
+  filter:
+    drop-shadow(0 14px 18px rgba(88, 74, 124, 0.18))
+    drop-shadow(0 0 10px rgba(255, 255, 255, 0.35));
   transform: translate(var(--drag-x), var(--drag-y)) scale(1.08);
 }
 
 .board-tile.is-preview-target {
   z-index: 1;
-  box-shadow: 0 10px 18px rgba(88, 74, 124, 0.12);
+  filter: drop-shadow(0 6px 10px rgba(88, 74, 124, 0.1));
 }
 
 .board-tile.is-swapping-forward,
@@ -279,76 +288,152 @@ select {
 }
 
 .board-tile.is-match-ready {
-  border-color: rgba(243, 196, 83, 0.7);
-  box-shadow:
-    0 0 0 4px rgba(243, 196, 83, 0.18),
-    0 12px 26px rgba(243, 196, 83, 0.18);
+  filter:
+    drop-shadow(0 0 10px rgba(243, 196, 83, 0.48))
+    drop-shadow(0 0 18px rgba(243, 196, 83, 0.24));
+}
+
+.board-tile.is-refilling {
+  animation: tile-refill-bounce 260ms cubic-bezier(0.22, 0.84, 0.24, 1.08) both;
+  animation-delay: var(--fall-delay, 0ms);
 }
 
 .board-tile.is-clearing {
   opacity: 0;
-  filter: brightness(1.2);
+  filter: brightness(1.2) drop-shadow(0 0 12px rgba(255, 245, 184, 0.55));
   transform: scale(0.72);
-  box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
 }
 
 .board-tile-image {
   width: 100%;
-  max-width: 52px;
+  max-width: 88px;
   user-select: none;
   pointer-events: none;
+  position: relative;
+  z-index: 1;
 }
 
 .tile-effect-layer {
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
+  inset: 4px;
+  border-radius: calc(20px - 4px);
   overflow: hidden;
   pointer-events: none;
+  z-index: 5;
 }
 
-.match-sparkle {
+.tile-shimmer {
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  overflow: hidden;
+  inset: -24%;
+  opacity: 0;
+  mix-blend-mode: screen;
+  animation-duration: 380ms;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+  animation-delay: var(--shimmer-delay);
 }
 
-.match-sparkle::before {
+.tile-shimmer-horizontal {
+  background: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0) 20%,
+    rgba(255, 247, 196, 0.18) 38%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(255, 241, 156, 0.38) 58%,
+    rgba(255, 255, 255, 0) 74%
+  );
+  transform: translateX(-92%) skewX(-20deg);
+  animation-name: tile-shimmer-horizontal;
+}
+
+.tile-shimmer-vertical {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 20%,
+    rgba(255, 247, 196, 0.18) 38%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(255, 241, 156, 0.38) 58%,
+    rgba(255, 255, 255, 0) 74%
+  );
+  transform: translateY(-92%) skewY(-14deg);
+  animation-name: tile-shimmer-vertical;
+}
+
+.match-glint {
+  position: absolute;
+  left: var(--glint-x);
+  top: var(--glint-y);
+  width: var(--glint-size);
+  height: var(--glint-size);
+  transform: translate(-50%, -50%) rotate(var(--glint-rotate));
+  opacity: 0;
+  pointer-events: none;
+  animation: glint-pop var(--glint-duration) ease-out both;
+  animation-delay: var(--glint-delay);
+}
+
+.match-glint::before,
+.match-glint::after {
   content: "";
   position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+}
+
+.match-glint-star::before {
+  width: 100%;
+  height: 20%;
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.2) 30%,
-    rgba(255, 255, 255, 0.95) 50%,
-    rgba(255, 255, 255, 0.22) 70%,
+    rgba(255, 247, 192, 0.92) 28%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 243, 170, 0.92) 72%,
     rgba(255, 255, 255, 0) 100%
   );
-  filter: blur(1.5px);
-  opacity: 0;
-  animation-duration: 280ms;
-  animation-timing-function: ease-out;
-  animation-fill-mode: both;
-  animation-delay: var(--sparkle-delay, 0ms);
+  box-shadow:
+    0 0 12px rgba(255, 248, 210, 0.9),
+    0 0 22px rgba(255, 255, 255, 0.7);
 }
 
-.match-sparkle-horizontal::before {
-  top: 50%;
-  left: -150%;
-  width: 160%;
-  height: 36%;
-  transform: translateY(-50%) skewX(-18deg);
-  animation-name: sparkle-sweep-horizontal;
+.match-glint-star::after {
+  width: 20%;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 247, 192, 0.92) 28%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 243, 170, 0.92) 72%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  box-shadow:
+    0 0 12px rgba(255, 248, 210, 0.9),
+    0 0 22px rgba(255, 255, 255, 0.7);
 }
 
-.match-sparkle-vertical::before {
-  top: -150%;
-  left: 50%;
-  width: 36%;
-  height: 160%;
-  transform: translateX(-50%) skewY(-18deg);
-  animation-name: sparkle-sweep-vertical;
+.match-glint-dot::before {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 247, 192, 0.92) 36%,
+    rgba(255, 255, 255, 0.2) 70%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  box-shadow:
+    0 0 10px rgba(255, 248, 210, 0.9),
+    0 0 18px rgba(255, 255, 255, 0.55);
+}
+
+.match-glint-dot::after {
+  width: 38%;
+  height: 38%;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.95);
 }
 
 @keyframes tile-swap-forward {
@@ -387,35 +472,74 @@ select {
   }
 }
 
-@keyframes sparkle-sweep-horizontal {
+@keyframes tile-refill-bounce {
   0% {
-    opacity: 0;
-    left: -150%;
+    transform: translateY(calc(var(--fall-lift, 12px) * -1)) scaleX(0.98) scaleY(1.03);
   }
 
-  20% {
-    opacity: 1;
+  58% {
+    transform: translateY(0) scaleX(1.04) scaleY(0.92);
+  }
+
+  76% {
+    transform: translateY(-2px) scaleX(0.995) scaleY(1.01);
   }
 
   100% {
-    opacity: 0;
-    left: 115%;
+    transform: translateY(0) scale(1);
   }
 }
 
-@keyframes sparkle-sweep-vertical {
+@keyframes tile-shimmer-horizontal {
   0% {
     opacity: 0;
-    top: -150%;
+    transform: translateX(-92%) skewX(-20deg);
   }
 
-  20% {
+  18% {
     opacity: 1;
   }
 
   100% {
     opacity: 0;
-    top: 115%;
+    transform: translateX(92%) skewX(-20deg);
+  }
+}
+
+@keyframes tile-shimmer-vertical {
+  0% {
+    opacity: 0;
+    transform: translateY(-92%) skewY(-14deg);
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(92%) skewY(-14deg);
+  }
+}
+
+@keyframes glint-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--glint-rotate)) scale(0.3);
+  }
+
+  22% {
+    opacity: 1;
+  }
+
+  54% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--glint-rotate)) scale(1.12);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--glint-rotate)) scale(0.82);
   }
 }
 
@@ -441,13 +565,17 @@ select {
     border-radius: 24px;
   }
 
-  .board-grid {
-    --board-gap: 8px;
-    padding: 10px;
+  .board-stage {
+    --board-gap: 2px;
+    --board-padding: 4px;
   }
 
   .board-tile {
     border-radius: 16px;
-    padding: 8px;
+    padding: 1px;
+  }
+
+  .tile-effect-layer {
+    border-radius: calc(16px - 4px);
   }
 }

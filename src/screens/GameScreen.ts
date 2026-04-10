@@ -5,7 +5,7 @@ import { PRE_GAME_MESSAGE } from '../content/story';
 import {
   clearMatches,
   collectMatchedPositions,
-  collapseAndRefill,
+  collapseAndRefillWithTargets,
   createInitialBoard,
   findMatchGroups,
   swapPositions
@@ -27,7 +27,7 @@ const SWAP_FORWARD_MS = 220;
 const SWAP_RETURN_MS = 180;
 const MATCH_PAUSE_MS = 620;
 const CLEAR_ANIMATION_MS = 220;
-const REFILL_SETTLE_MS = 160;
+const REFILL_SETTLE_MS = 260;
 
 function wait(ms: number) {
   return new Promise<void>((resolve) => {
@@ -177,13 +177,18 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
       await wait(CLEAR_ANIMATION_MS);
 
       cleared += matchedPositions.length;
-      workingBoard = collapseAndRefill(clearMatches(workingBoard, matchedPositions));
+      const refillResult = collapseAndRefillWithTargets(clearMatches(workingBoard, matchedPositions));
+      workingBoard = refillResult.board;
       board = workingBoard;
-      animationState = { kind: 'idle' };
+      animationState = {
+        kind: 'refill',
+        fallTargets: refillResult.fallTargets
+      };
       viewState.statusText = 'New pieces fall into place.';
       refresh();
       await wait(REFILL_SETTLE_MS);
 
+      animationState = { kind: 'idle' };
       groups = findMatchGroups(workingBoard);
     }
 

@@ -1,9 +1,50 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-46 -46 92 92" width="92" height="92">
-  <polygon points="0,-43 43,0 0,43 -43,0" fill="#254A08"/>
-  <polygon points="0,-40 40,0 0,40 -40,0" fill="#639922"/>
-  <polygon points="0,-40 20,-16 0,-8 -20,-16" fill="#97C459"/>
-  <polygon points="-40,0 -20,-16 0,-8 0,8 -20,16" fill="#4B7812"/>
-  <polygon points="40,0 20,-16 0,-8 0,8 20,16" fill="#38680A"/>
-  <polygon points="0,40 20,16 0,8 -20,16" fill="#426010"/>
-  <ellipse cx="-10" cy="-24" rx="5" ry="7" fill="#D0E890" opacity="0.78" transform="rotate(15,-10,-24)"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none">
+<defs>
+  <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.18"/>
+  </filter>
+  <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur stdDeviation="6" result="blur"/>
+    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <radialGradient id="shine" cx="30%" cy="24%" r="70%">
+    <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+    <stop offset="22%" stop-color="#ffffff" stop-opacity="0.45"/>
+    <stop offset="48%" stop-color="#ffffff" stop-opacity="0.12"/>
+    <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="edgeGloss" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+    <stop offset="30%" stop-color="#ffffff" stop-opacity="0.28"/>
+    <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+  </linearGradient>
+</defs>
+
+<defs>
+  <linearGradient id="gemFillP" x1="50" y1="34" x2="208" y2="226" gradientUnits="userSpaceOnUse">
+    <stop offset="0%" stop-color="#f7ffe9"/>
+    <stop offset="18%" stop-color="#d7ff9e"/>
+    <stop offset="50%" stop-color="#98dd3b"/>
+    <stop offset="82%" stop-color="#4e9721"/>
+    <stop offset="100%" stop-color="#24530d"/>
+  </linearGradient>
+</defs>
+<g filter="url(#shadow)">
+  <path d="M128 22l84 106-84 106L44 128 128 22z" fill="url(#gemFillP)" stroke="#f5ffdf" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M128 32L59 120c24-9 48-13 69-13V32z" fill="#ffffff" opacity="0.52"/>
+  <path d="M128 107c-21 0-45 4-69 13l69 104V107z" fill="#abef52" opacity="0.34"/>
+  <path d="M128 32v75c21 0 45 4 69 13L128 32z" fill="#efffd0" opacity="0.32"/>
+  <path d="M128 107v117l69-104c-24-9-48-13-69-13z" fill="#3b7814" opacity="0.34"/>
+  <path d="M95 64l33 43 33-43" stroke="#ffffff" stroke-opacity="0.55" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M74 140c20-9 42-13 54-13 12 0 34 4 54 13" stroke="#f8ffe8" stroke-opacity="0.35" stroke-width="4.5" stroke-linecap="round"/>
+  <ellipse cx="98" cy="79" rx="19" ry="12" transform="rotate(-22 98 79)" fill="#ffffff" opacity="0.7"/>
+  <ellipse cx="114" cy="62" rx="9" ry="5" transform="rotate(-20 114 62)" fill="#ffffff" opacity="0.86"/>
+</g>
+
+<g opacity="0.95">
+  <path d="M58 58l4 12 12 4-12 4-4 12-4-12-12-4 12-4 4-12z" fill="#fff8d8"/>
+  <path d="M201 72l3 9 9 3-9 3-3 9-3-9-9-3 9-3 3-9z" fill="#fff8d8" opacity="0.85"/>
+  <circle cx="198" cy="175" r="3.5" fill="#ffffff" opacity="0.9"/>
+  <circle cx="64" cy="184" r="2.5" fill="#ffffff" opacity="0.75"/>
+</g>
 </svg>
