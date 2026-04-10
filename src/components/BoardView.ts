@@ -7,7 +7,7 @@ export type BoardAnimationState =
   | { kind: 'swap-return'; first: Position; second: Position }
   | { kind: 'match-pause'; groups: MatchGroup[] }
   | { kind: 'refill'; fallTargets: FallTarget[] }
-  | { kind: 'clearing'; positions: Position[] };
+  | { kind: 'clearing'; groups: MatchGroup[] };
 
 interface BoardViewOptions {
   board: Board;
@@ -357,14 +357,23 @@ export function createBoardView({
         animationState.kind === 'refill' ? getFallTarget(position, animationState.fallTargets) : null;
 
       if (fallTarget) {
-        const normalizedDistance = Math.min(fallTarget.dropDistance, 5);
+        const normalizedDistance = Math.min(fallTarget.dropDistance, 6);
         button.classList.add('is-refilling');
-        button.style.setProperty('--fall-lift', `${normalizedDistance * 6}px`);
-        button.style.setProperty('--fall-delay', `${normalizedDistance * 18}ms`);
+        button.style.setProperty('--fall-steps', `${normalizedDistance}`);
+        button.style.setProperty('--fall-duration', `${180 + normalizedDistance * 70}ms`);
       }
 
-      if (animationState.kind === 'clearing' && containsPosition(animationState.positions, position)) {
+      const clearingEffects =
+        animationState.kind === 'clearing'
+          ? getTileMatchEffects(position, animationState.groups)
+          : [];
+
+      if (clearingEffects.length > 0) {
         button.classList.add('is-clearing');
+        button.style.setProperty(
+          '--clear-delay',
+          `${Math.min(...clearingEffects.map((effect) => effect.delayMs))}ms`
+        );
       }
 
       const image = document.createElement('img');

@@ -10,7 +10,7 @@ import {
   findMatchGroups,
   swapPositions
 } from '../game/board';
-import type { Position } from '../game/types';
+import type { FallTarget, MatchGroup, Position } from '../game/types';
 
 interface GameScreenOptions {
   onBackToTitle: () => void;
@@ -26,13 +26,29 @@ interface GameViewState {
 const SWAP_FORWARD_MS = 220;
 const SWAP_RETURN_MS = 180;
 const MATCH_PAUSE_MS = 620;
-const CLEAR_ANIMATION_MS = 220;
-const REFILL_SETTLE_MS = 260;
+const CLEAR_STEP_MS = 60;
+const CLEAR_ANIMATION_MS = 240;
 
 function wait(ms: number) {
   return new Promise<void>((resolve) => {
     window.setTimeout(resolve, ms);
   });
+}
+
+function getClearingSweepDuration(groups: MatchGroup[]) {
+  const maxOffset = groups.reduce((currentMax, group) => {
+    return Math.max(currentMax, (group.positions.length - 1) * CLEAR_STEP_MS);
+  }, 0);
+
+  return CLEAR_ANIMATION_MS + maxOffset;
+}
+
+function getRefillAnimationDuration(fallTargets: FallTarget[]) {
+  const maxDistance = fallTargets.reduce((currentMax, target) => {
+    return Math.max(currentMax, Math.min(target.dropDistance, 6));
+  }, 0);
+
+  return Math.max(240, 180 + maxDistance * 70);
 }
 
 export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElement {
@@ -169,12 +185,12 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
 
       animationState = {
         kind: 'clearing',
-        positions: matchedPositions
+        groups
       };
       viewState.statusText =
         cascades === 1 ? 'The matched stars are clearing.' : `Cascade ${cascades} is clearing.`;
       refresh();
-      await wait(CLEAR_ANIMATION_MS);
+      await wait(getClearingSweepDuration(groups));
 
       cleared += matchedPositions.length;
       const refillResult = collapseAndRefillWithTargets(clearMatches(workingBoard, matchedPositions));
@@ -186,7 +202,7 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
       };
       viewState.statusText = 'New pieces fall into place.';
       refresh();
-      await wait(REFILL_SETTLE_MS);
+      await wait(getRefillAnimationDuration(refillResult.fallTargets));
 
       animationState = { kind: 'idle' };
       groups = findMatchGroups(workingBoard);
