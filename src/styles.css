@@ -245,10 +245,68 @@ select {
 }
 
 .piece-score-count {
+  display: inline-block;
   font-size: 1rem;
   font-weight: 700;
   color: #423851;
   min-width: 2ch;
+}
+
+.piece-score-count.count-pop {
+  animation: count-pop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes count-pop {
+  0% {
+    transform: scale(1);
+    color: #423851;
+  }
+
+  55% {
+    transform: scale(1.6);
+    color: var(--primary);
+  }
+
+  100% {
+    transform: scale(1);
+    color: #423851;
+  }
+}
+
+.collect-shard {
+  position: fixed;
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 500;
+  filter: drop-shadow(0 2px 8px rgba(88, 74, 124, 0.35)) brightness(1.1);
+  animation: shard-fly var(--shard-duration, 460ms) cubic-bezier(0.4, 0, 0.2, 1) var(--shard-delay, 0ms) backwards;
+}
+
+@keyframes shard-fly {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.5);
+  }
+
+  10% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1.05);
+  }
+
+  44% {
+    opacity: 1;
+    transform: translate(
+      calc(var(--shard-dx) * 0.5),
+      calc(var(--shard-dy) * 0.5 - 60px)
+    ) scale(0.75);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(var(--shard-dx), var(--shard-dy)) scale(0.15);
+  }
 }
 
 .game-art-frame {

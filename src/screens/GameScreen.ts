@@ -3,7 +3,7 @@ import { createButton } from '../components/Button';
 import { createScreenShell } from '../components/ScreenShell';
 import { PRE_GAME_MESSAGE } from '../content/story';
 import lapinCornerImage from '../assets/characters/lapin/lapin-corner-ui.png';
-import { PIECE_ASSETS, PIECE_IDS, type PieceId } from '../assets/pieces';
+import { PIECE_ASSETS, PIECE_ASSET_MAP, PIECE_IDS, type PieceId } from '../assets/pieces';
 import {
   clearMatches,
   collectMatchedPositions,
@@ -12,7 +12,7 @@ import {
   findMatchGroups,
   swapPositions
 } from '../game/board';
-import type { FallTarget, MatchGroup, Position } from '../game/types';
+import type { Board, FallTarget, MatchGroup, Position } from '../game/types';
 
 interface GameScreenOptions {
   onBackToTitle: () => void;
@@ -161,7 +161,7 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
 
     row.append(icon, count);
     scoreboard.append(row);
-    return { pieceId: piece.id as PieceId, countEl: count };
+    return { pieceId: piece.id as PieceId, countEl: count, iconEl: icon };
   });
 
   const artFrame = document.createElement('div');
@@ -198,6 +198,50 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     );
   };
 
+  const launchCollectShards = (positions: Position[], currentBoard: Board) => {
+    const SHARD_SIZE = 30;
+    const FLIGHT_MS = 460;
+
+    positions.forEach((pos, index) => {
+      const pieceId = currentBoard[pos.row][pos.col];
+      const tile = boardMount.querySelector<HTMLButtonElement>(
+        `[data-row="${pos.row}"][data-col="${pos.col}"]`
+      );
+      const scoreItem = scoreItems.find(item => item.pieceId === pieceId);
+      if (!tile || !scoreItem) return;
+
+      const tileRect = tile.getBoundingClientRect();
+      const targetRect = scoreItem.iconEl.getBoundingClientRect();
+      if (tileRect.width === 0 || targetRect.width === 0) return;
+
+      const startX = tileRect.left + tileRect.width / 2 - SHARD_SIZE / 2;
+      const startY = tileRect.top + tileRect.height / 2 - SHARD_SIZE / 2;
+      const dx = (targetRect.left + targetRect.width / 2) - (tileRect.left + tileRect.width / 2);
+      const dy = (targetRect.top + targetRect.height / 2) - (tileRect.top + tileRect.height / 2);
+
+      const shard = document.createElement('img');
+      shard.src = PIECE_ASSET_MAP[pieceId].imagePath;
+      shard.className = 'collect-shard';
+      shard.style.left = `${startX}px`;
+      shard.style.top = `${startY}px`;
+      shard.style.setProperty('--shard-dx', `${dx}px`);
+      shard.style.setProperty('--shard-dy', `${dy}px`);
+      shard.style.setProperty('--shard-delay', `${index * 32}ms`);
+      shard.style.setProperty('--shard-duration', `${FLIGHT_MS}ms`);
+
+      document.body.append(shard);
+
+      shard.addEventListener('animationend', () => {
+        shard.remove();
+        viewState.clearedByPiece[pieceId] = (viewState.clearedByPiece[pieceId] ?? 0) + 1;
+        scoreItem.countEl.textContent = String(viewState.clearedByPiece[pieceId]);
+        scoreItem.countEl.classList.remove('count-pop');
+        void scoreItem.countEl.offsetWidth;
+        scoreItem.countEl.classList.add('count-pop');
+      }, { once: true });
+    });
+  };
+
   const resetBoard = () => {
     if (isAnimating) {
       return;
@@ -210,6 +254,7 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     viewState.moveCount = 0;
     viewState.statusText = 'Fresh board ready. Help Lapin collect stars.';
     PIECE_IDS.forEach(id => { viewState.clearedByPiece[id] = 0; });
+    document.querySelectorAll('.collect-shard').forEach(el => el.remove());
     refresh();
   };
 
@@ -272,6 +317,7 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
           ? 'Match found. The stars pause for a moment...'
           : `Cascade ${cascades}. Another match is ready to clear.`;
       refresh();
+      launchCollectShards(matchedPositions, workingBoard);
       await wait(MATCH_PAUSE_MS);
 
       animationState = {
@@ -284,10 +330,6 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
       await wait(getClearingSweepDuration(groups));
 
       cleared += matchedPositions.length;
-      matchedPositions.forEach(pos => {
-        const pieceId = workingBoard[pos.row][pos.col];
-        viewState.clearedByPiece[pieceId] = (viewState.clearedByPiece[pieceId] ?? 0) + 1;
-      });
       const refillResult = collapseAndRefillWithTargets(clearMatches(workingBoard, matchedPositions));
       workingBoard = refillResult.board;
       board = workingBoard;
