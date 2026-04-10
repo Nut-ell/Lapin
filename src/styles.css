@@ -63,6 +63,10 @@ select {
   backdrop-filter: blur(16px);
 }
 
+.screen-card.screen-card-game {
+  width: min(100%, 1080px);
+}
+
 .screen-header {
   display: grid;
   gap: 10px;
@@ -186,6 +190,82 @@ select {
 .status-text {
   min-height: 1.5em;
   font-weight: 600;
+}
+
+.game-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(220px, 28vw, 320px);
+  gap: clamp(18px, 3vw, 30px);
+  align-items: end;
+}
+
+.game-main-column {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.game-board-mount {
+  width: min(100%, 680px);
+}
+
+.game-art-rail {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.piece-scoreboard {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+}
+
+.piece-score-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.piece-score-icon {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.piece-score-count {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #423851;
+  min-width: 2ch;
+}
+
+.game-art-frame {
+  width: min(100%, 320px);
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  margin-top: auto;
+  align-self: flex-end;
+  pointer-events: none;
+  user-select: none;
+}
+
+.game-art-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 16px 24px rgba(255, 232, 176, 0.28))
+    drop-shadow(0 16px 36px rgba(88, 74, 124, 0.1));
 }
 
 .board-stage {
@@ -601,5 +681,27 @@ select {
 
   .tile-effect-layer {
     border-radius: calc(16px - 4px);
+  }
+}
+
+@media (max-width: 920px) {
+  .screen-card.screen-card-game {
+    width: min(100%, 860px);
+  }
+
+  .game-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .game-board-mount {
+    width: 100%;
+  }
+
+  .game-art-rail {
+    justify-content: flex-end;
+  }
+
+  .game-art-frame {
+    width: min(44vw, 240px);
   }
 }

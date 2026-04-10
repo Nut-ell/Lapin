@@ -2,6 +2,8 @@ import { createBoardView, type BoardAnimationState } from '../components/BoardVi
 import { createButton } from '../components/Button';
 import { createScreenShell } from '../components/ScreenShell';
 import { PRE_GAME_MESSAGE } from '../content/story';
+import lapinCornerImage from '../assets/characters/lapin/lapin-corner-ui.png';
+import { PIECE_ASSETS, PIECE_IDS, type PieceId } from '../assets/pieces';
 import {
   clearMatches,
   collectMatchedPositions,
@@ -21,6 +23,7 @@ interface GameViewState {
   starsCollected: number;
   moveCount: number;
   statusText: string;
+  clearedByPiece: Record<PieceId, number>;
 }
 
 const SWAP_FORWARD_MS = 220;
@@ -60,11 +63,18 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     selectedPosition: null,
     starsCollected: 0,
     moveCount: 0,
-    statusText: 'Press and drag a piece toward a neighboring tile to swap.'
+    statusText: 'Press and drag a piece toward a neighboring tile to swap.',
+    clearedByPiece: Object.fromEntries(PIECE_IDS.map(id => [id, 0])) as Record<PieceId, number>
   };
 
   const body = document.createElement('div');
   body.className = 'game-screen';
+
+  const layout = document.createElement('div');
+  layout.className = 'game-layout';
+
+  const mainColumn = document.createElement('div');
+  mainColumn.className = 'game-main-column';
 
   const missionCard = document.createElement('div');
   missionCard.className = 'info-card';
@@ -89,11 +99,53 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
   status.className = 'status-text';
 
   const boardMount = document.createElement('div');
+  boardMount.className = 'game-board-mount';
+
+  const artRail = document.createElement('aside');
+  artRail.className = 'game-art-rail';
+  artRail.setAttribute('aria-hidden', 'true');
+
+  const scoreboard = document.createElement('div');
+  scoreboard.className = 'piece-scoreboard';
+
+  const scoreItems = PIECE_ASSETS.map(piece => {
+    const row = document.createElement('div');
+    row.className = 'piece-score-row';
+
+    const icon = document.createElement('img');
+    icon.src = piece.imagePath;
+    icon.alt = '';
+    icon.className = 'piece-score-icon';
+
+    const count = document.createElement('span');
+    count.className = 'piece-score-count';
+    count.textContent = '0';
+
+    row.append(icon, count);
+    scoreboard.append(row);
+    return { pieceId: piece.id as PieceId, countEl: count };
+  });
+
+  const artFrame = document.createElement('div');
+  artFrame.className = 'game-art-frame';
+
+  const artImage = document.createElement('img');
+  artImage.className = 'game-art-image';
+  artImage.src = lapinCornerImage;
+  artImage.alt = '';
+  artImage.decoding = 'async';
+
+  artFrame.append(artImage);
+  artRail.append(scoreboard, artFrame);
 
   const refresh = () => {
     starsStat.textContent = `Stars collected: ${viewState.starsCollected}`;
     movesStat.textContent = `Moves: ${viewState.moveCount}`;
     status.textContent = viewState.statusText;
+
+    scoreItems.forEach(({ pieceId, countEl }) => {
+      countEl.textContent = String(viewState.clearedByPiece[pieceId] ?? 0);
+    });
 
     boardMount.replaceChildren(
       createBoardView({
@@ -119,6 +171,7 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     viewState.starsCollected = 0;
     viewState.moveCount = 0;
     viewState.statusText = 'Fresh board ready. Help Lapin collect stars.';
+    PIECE_IDS.forEach(id => { viewState.clearedByPiece[id] = 0; });
     refresh();
   };
 
@@ -193,6 +246,10 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
       await wait(getClearingSweepDuration(groups));
 
       cleared += matchedPositions.length;
+      matchedPositions.forEach(pos => {
+        const pieceId = workingBoard[pos.row][pos.col];
+        viewState.clearedByPiece[pieceId] = (viewState.clearedByPiece[pieceId] ?? 0) + 1;
+      });
       const refillResult = collapseAndRefillWithTargets(clearMatches(workingBoard, matchedPositions));
       workingBoard = refillResult.board;
       board = workingBoard;
@@ -242,7 +299,9 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     status.textContent = viewState.statusText;
   };
 
-  body.append(missionCard, stats, hint, status, boardMount);
+  mainColumn.append(missionCard, stats, hint, status, boardMount);
+  layout.append(mainColumn, artRail);
+  body.append(layout);
 
   const screen = createScreenShell({
     title: 'Lapin Puzzle',
@@ -261,6 +320,7 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
       })
     ]
   });
+  screen.classList.add('screen-card-game');
 
   refresh();
   return screen;
