@@ -275,37 +275,48 @@ select {
 
 .collect-shard {
   position: fixed;
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
   pointer-events: none;
   z-index: 500;
-  filter: drop-shadow(0 2px 8px rgba(88, 74, 124, 0.35)) brightness(1.1);
-  animation: shard-fly var(--shard-duration, 460ms) cubic-bezier(0.4, 0, 0.2, 1) var(--shard-delay, 0ms) backwards;
+  filter: drop-shadow(0 2px 8px rgba(88, 74, 124, 0.4)) brightness(1.15);
+  animation: shard-fly var(--shard-duration, 500ms) linear var(--shard-delay, 0ms) backwards;
 }
 
 @keyframes shard-fly {
   0% {
     opacity: 0;
     transform: translate(0, 0) scale(0.5);
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1);
   }
 
   10% {
     opacity: 1;
-    transform: translate(0, 0) scale(1.05);
+    transform: translate(0, 0) scale(1.0);
+    animation-timing-function: ease-in-out;
   }
 
-  44% {
+  58% {
     opacity: 1;
     transform: translate(
-      calc(var(--shard-dx) * 0.5),
-      calc(var(--shard-dy) * 0.5 - 60px)
-    ) scale(0.75);
+      calc(var(--shard-dx) * 0.58),
+      calc(var(--shard-dy) * 0.58 - 22px)
+    ) scale(0.6);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.3);
+  }
+
+  88% {
+    opacity: 0.7;
+    transform: translate(
+      calc(var(--shard-dx) * 0.95),
+      calc(var(--shard-dy) * 0.95)
+    ) scale(0.2);
   }
 
   100% {
     opacity: 0;
-    transform: translate(var(--shard-dx), var(--shard-dy)) scale(0.15);
+    transform: translate(var(--shard-dx), var(--shard-dy)) scale(0);
   }
 }
 

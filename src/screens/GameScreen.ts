@@ -199,8 +199,8 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
   };
 
   const launchCollectShards = (positions: Position[], currentBoard: Board) => {
-    const SHARD_SIZE = 30;
-    const FLIGHT_MS = 460;
+    const SHARD_SIZE = 34;
+    const FLIGHT_MS = 500;
 
     positions.forEach((pos, index) => {
       const pieceId = currentBoard[pos.row][pos.col];
