@@ -179,12 +179,44 @@ select {
 }
 
 .screen-card-game .info-card {
+  position: relative;
   font-family: 'Fredoka', sans-serif;
-  font-weight: 500;
-  font-size: 1.08rem;
-  background: linear-gradient(135deg, rgba(255, 242, 252, 0.88) 0%, rgba(242, 235, 255, 0.88) 100%);
-  border: 1px solid rgba(167, 139, 250, 0.3);
-  color: #a855f7;
+  font-weight: 600;
+  font-size: 1.12rem;
+  letter-spacing: 0.02em;
+  color: #c026d3;
+  background:
+    linear-gradient(135deg, rgba(255, 244, 255, 0.92) 0%, rgba(238, 228, 255, 0.92) 100%) padding-box,
+    linear-gradient(125deg, #f472b6 0%, #a78bfa 50%, #67e8f9 100%) border-box;
+  border: 2px solid transparent;
+  overflow: visible;
+}
+
+.screen-card-game .info-card::before,
+.screen-card-game .info-card::after {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1rem;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.screen-card-game .info-card::before {
+  content: '✦ 🍭 ✦';
+  left: 0;
+  transform: translateY(-50%) translateX(calc(-100% - 10px));
+  color: #f472b6;
+  filter: drop-shadow(0 0 6px rgba(244, 114, 182, 0.55));
+}
+
+.screen-card-game .info-card::after {
+  content: '✦ 🍭 ✦';
+  right: 0;
+  transform: translateY(-50%) translateX(calc(100% + 10px));
+  color: #67e8f9;
+  filter: drop-shadow(0 0 6px rgba(103, 232, 249, 0.55));
 }
 
 .game-stats {
