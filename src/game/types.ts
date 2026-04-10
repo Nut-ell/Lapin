@@ -5,6 +5,13 @@ export interface Position {
   col: number;
 }
 
+export type MatchDirection = 'horizontal' | 'vertical';
+
+export interface MatchGroup {
+  direction: MatchDirection;
+  positions: Position[];
+}
+
 export type Board = PieceId[][];
 export type BoardCell = PieceId | null;
 
@@ -14,4 +21,3 @@ export interface SwapResult {
   cleared: number;
   cascades: number;
 }
-

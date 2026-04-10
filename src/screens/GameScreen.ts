@@ -4,9 +4,10 @@ import { createScreenShell } from '../components/ScreenShell';
 import { PRE_GAME_MESSAGE } from '../content/story';
 import {
   clearMatches,
+  collectMatchedPositions,
   collapseAndRefill,
   createInitialBoard,
-  findMatches,
+  findMatchGroups,
   swapPositions
 } from '../game/board';
 import type { Position } from '../game/types';
@@ -22,8 +23,9 @@ interface GameViewState {
   statusText: string;
 }
 
-const SWAP_ANIMATION_MS = 180;
-const MATCH_PAUSE_MS = 240;
+const SWAP_FORWARD_MS = 220;
+const SWAP_RETURN_MS = 180;
+const MATCH_PAUSE_MS = 620;
 const CLEAR_ANIMATION_MS = 220;
 const REFILL_SETTLE_MS = 160;
 
@@ -113,32 +115,29 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     viewState.moveCount += 1;
     viewState.selectedPosition = null;
 
-    const originalBoard = board;
     const swappedBoard = swapPositions(board, start, target);
-    const initialMatches = findMatches(swappedBoard);
+    const initialGroups = findMatchGroups(swappedBoard);
 
-    board = swappedBoard;
     animationState = {
-      kind: 'swap',
+      kind: 'swap-forward',
       first: start,
       second: target
     };
     viewState.statusText =
-      initialMatches.length > 0
+      initialGroups.length > 0
         ? "Swap complete. Let's check the match."
-        : 'That swap did not make a match, so it slides back.';
+        : 'That swap did not make a match, so it glides back.';
     refresh();
-    await wait(SWAP_ANIMATION_MS);
+    await wait(SWAP_FORWARD_MS);
 
-    if (initialMatches.length === 0) {
-      board = originalBoard;
+    if (initialGroups.length === 0) {
       animationState = {
-        kind: 'swap',
-        first: target,
-        second: start
+        kind: 'swap-return',
+        first: start,
+        second: target
       };
       refresh();
-      await wait(SWAP_ANIMATION_MS);
+      await wait(SWAP_RETURN_MS);
 
       animationState = { kind: 'idle' };
       isAnimating = false;
@@ -147,16 +146,19 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
       return;
     }
 
+    board = swappedBoard;
     let workingBoard = swappedBoard;
-    let matches = initialMatches;
+    let groups = initialGroups;
     let cleared = 0;
     let cascades = 0;
 
-    while (matches.length > 0) {
+    while (groups.length > 0) {
       cascades += 1;
+      const matchedPositions = collectMatchedPositions(groups);
+
       animationState = {
         kind: 'match-pause',
-        matches
+        groups
       };
       viewState.statusText =
         cascades === 1
@@ -167,22 +169,22 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
 
       animationState = {
         kind: 'clearing',
-        matches
+        positions: matchedPositions
       };
       viewState.statusText =
         cascades === 1 ? 'The matched stars are clearing.' : `Cascade ${cascades} is clearing.`;
       refresh();
       await wait(CLEAR_ANIMATION_MS);
 
-      cleared += matches.length;
-      workingBoard = collapseAndRefill(clearMatches(workingBoard, matches));
+      cleared += matchedPositions.length;
+      workingBoard = collapseAndRefill(clearMatches(workingBoard, matchedPositions));
       board = workingBoard;
       animationState = { kind: 'idle' };
       viewState.statusText = 'New pieces fall into place.';
       refresh();
       await wait(REFILL_SETTLE_MS);
 
-      matches = findMatches(workingBoard);
+      groups = findMatchGroups(workingBoard);
     }
 
     viewState.starsCollected += cleared;

@@ -1,12 +1,12 @@
 import { PIECE_ASSET_MAP } from '../assets/pieces';
-import type { Board, Position } from '../game/types';
+import type { Board, MatchDirection, MatchGroup, Position } from '../game/types';
 
 export type BoardAnimationState =
   | { kind: 'idle' }
   | { kind: 'swap-forward'; first: Position; second: Position }
   | { kind: 'swap-return'; first: Position; second: Position }
-  | { kind: 'match-pause'; matches: Position[] }
-  | { kind: 'clearing'; matches: Position[] };
+  | { kind: 'match-pause'; groups: MatchGroup[] }
+  | { kind: 'clearing'; positions: Position[] };
 
 interface BoardViewOptions {
   board: Board;
@@ -16,6 +16,15 @@ interface BoardViewOptions {
   onDragStart: (position: Position) => void;
   onSwapAttempt: (start: Position, target: Position) => void;
   onDragEnd: () => void;
+}
+
+interface GroupOverlayEffect {
+  direction: MatchDirection;
+  startRow: number;
+  startCol: number;
+  rowSpan: number;
+  colSpan: number;
+  delayMs: number;
 }
 
 function isSelected(current: Position, selectedPosition: Position | null) {
@@ -42,6 +51,48 @@ function clamp(value: number, min: number, max: number) {
 
 function containsPosition(positions: Position[], target: Position) {
   return positions.some((position) => samePosition(position, target));
+}
+
+function getTileMatchEffects(position: Position, groups: MatchGroup[]) {
+  const effects: Array<{
+    direction: MatchDirection;
+    delayMs: number;
+  }> = [];
+
+  groups.forEach((group) => {
+    const index = group.positions.findIndex((entry) => samePosition(entry, position));
+
+    if (index === -1) {
+      return;
+    }
+
+    effects.push({
+      direction: group.direction,
+      delayMs: index * 60
+    });
+  });
+
+  return effects;
+}
+
+function getGroupOverlayEffects(groups: MatchGroup[]): GroupOverlayEffect[] {
+  return groups.map((group, index) => {
+    const rows = group.positions.map((position) => position.row);
+    const cols = group.positions.map((position) => position.col);
+    const startRow = Math.min(...rows);
+    const endRow = Math.max(...rows);
+    const startCol = Math.min(...cols);
+    const endCol = Math.max(...cols);
+
+    return {
+      direction: group.direction,
+      startRow,
+      startCol,
+      rowSpan: endRow - startRow + 1,
+      colSpan: endCol - startCol + 1,
+      delayMs: index * 70
+    };
+  });
 }
 
 function getSwapOffset(position: Position, animationState: BoardAnimationState) {
@@ -128,6 +179,9 @@ export function createBoardView({
   onSwapAttempt,
   onDragEnd
 }: BoardViewOptions): HTMLDivElement {
+  const stage = document.createElement('div');
+  stage.className = 'board-stage';
+
   const grid = document.createElement('div');
   grid.className = 'board-grid';
   grid.setAttribute('role', 'grid');
@@ -205,8 +259,8 @@ export function createBoardView({
 
       if (previewTile) {
         previewTile.classList.add('is-preview-target');
-        previewTile.style.setProperty('--preview-x', `${visualOffset.x * 0.18}px`);
-        previewTile.style.setProperty('--preview-y', `${visualOffset.y * 0.18}px`);
+        previewTile.style.setProperty('--preview-x', `${visualOffset.x * -0.18}px`);
+        previewTile.style.setProperty('--preview-y', `${visualOffset.y * -0.18}px`);
         activeDrag.previewTile = previewTile;
       }
     }
@@ -235,6 +289,23 @@ export function createBoardView({
       onDragEnd();
     }
   };
+
+  if (animationState.kind === 'match-pause') {
+    const overlay = document.createElement('div');
+    overlay.className = 'board-overlay';
+    overlay.setAttribute('aria-hidden', 'true');
+
+    getGroupOverlayEffects(animationState.groups).forEach((effect) => {
+      const beam = document.createElement('span');
+      beam.className = `board-beam board-beam-${effect.direction}`;
+      beam.style.gridRow = `${effect.startRow + 1} / span ${effect.rowSpan}`;
+      beam.style.gridColumn = `${effect.startCol + 1} / span ${effect.colSpan}`;
+      beam.style.setProperty('--beam-delay', `${effect.delayMs}ms`);
+      overlay.append(beam);
+    });
+
+    stage.append(overlay);
+  }
 
   const handlePointerCancel = (event: PointerEvent) => {
     if (!activeDrag || event.pointerId !== activeDrag.pointerId) {
@@ -278,11 +349,16 @@ export function createBoardView({
         button.style.setProperty('--swap-y', `${swapOffset.y}`);
       }
 
-      if (animationState.kind === 'match-pause' && containsPosition(animationState.matches, position)) {
+      const matchEffects =
+        animationState.kind === 'match-pause'
+          ? getTileMatchEffects(position, animationState.groups)
+          : [];
+
+      if (matchEffects.length > 0) {
         button.classList.add('is-match-ready');
       }
 
-      if (animationState.kind === 'clearing' && containsPosition(animationState.matches, position)) {
+      if (animationState.kind === 'clearing' && containsPosition(animationState.positions, position)) {
         button.classList.add('is-clearing');
       }
 
@@ -295,7 +371,17 @@ export function createBoardView({
       hiddenLabel.className = 'sr-only';
       hiddenLabel.textContent = piece.label;
 
-      button.append(image, hiddenLabel);
+      const sparkleLayer = document.createElement('span');
+      sparkleLayer.className = 'tile-effect-layer';
+
+      matchEffects.forEach((effect) => {
+        const sparkle = document.createElement('span');
+        sparkle.className = `match-sparkle match-sparkle-${effect.direction}`;
+        sparkle.style.setProperty('--sparkle-delay', `${effect.delayMs}ms`);
+        sparkleLayer.append(sparkle);
+      });
+
+      button.append(image, hiddenLabel, sparkleLayer);
       button.addEventListener('pointerdown', (event) => {
         if (interactionDisabled) {
           return;
@@ -326,5 +412,6 @@ export function createBoardView({
     });
   });
 
-  return grid;
+  stage.append(grid);
+  return stage;
 }

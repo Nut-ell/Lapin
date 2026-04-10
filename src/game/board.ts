@@ -1,6 +1,6 @@
 import { PIECE_IDS, type PieceId } from '../assets/pieces';
 import { BOARD_SIZE, MIN_MATCH_LENGTH } from './constants';
-import type { Board, BoardCell, Position, SwapResult } from './types';
+import type { Board, BoardCell, MatchGroup, Position, SwapResult } from './types';
 
 function randomPieceId(excluded: PieceId[] = []): PieceId {
   const availablePieces = PIECE_IDS.filter((pieceId) => !excluded.includes(pieceId));
@@ -54,8 +54,8 @@ export function swapPositions(board: Board, first: Position, second: Position): 
   return nextBoard;
 }
 
-export function findMatches(board: Board | BoardCell[][]): Position[] {
-  const matched = new Map<string, Position>();
+export function findMatchGroups(board: Board | BoardCell[][]): MatchGroup[] {
+  const groups: MatchGroup[] = [];
   const size = board.length;
 
   for (let row = 0; row < size; row += 1) {
@@ -69,10 +69,16 @@ export function findMatches(board: Board | BoardCell[][]): Position[] {
         const runLength = col - runStart;
 
         if (previous !== null && runLength >= MIN_MATCH_LENGTH) {
+          const positions: Position[] = [];
+
           for (let matchCol = runStart; matchCol < col; matchCol += 1) {
-            const position = { row, col: matchCol };
-            matched.set(positionKey(position), position);
+            positions.push({ row, col: matchCol });
           }
+
+          groups.push({
+            direction: 'horizontal',
+            positions
+          });
         }
 
         runStart = col;
@@ -91,10 +97,16 @@ export function findMatches(board: Board | BoardCell[][]): Position[] {
         const runLength = row - runStart;
 
         if (previous !== null && runLength >= MIN_MATCH_LENGTH) {
+          const positions: Position[] = [];
+
           for (let matchRow = runStart; matchRow < row; matchRow += 1) {
-            const position = { row: matchRow, col };
-            matched.set(positionKey(position), position);
+            positions.push({ row: matchRow, col });
           }
+
+          groups.push({
+            direction: 'vertical',
+            positions
+          });
         }
 
         runStart = row;
@@ -102,7 +114,23 @@ export function findMatches(board: Board | BoardCell[][]): Position[] {
     }
   }
 
+  return groups;
+}
+
+export function collectMatchedPositions(groups: MatchGroup[]): Position[] {
+  const matched = new Map<string, Position>();
+
+  groups.forEach((group) => {
+    group.positions.forEach((position) => {
+      matched.set(positionKey(position), position);
+    });
+  });
+
   return Array.from(matched.values());
+}
+
+export function findMatches(board: Board | BoardCell[][]): Position[] {
+  return collectMatchedPositions(findMatchGroups(board));
 }
 
 function collapseColumns(board: BoardCell[][]) {
@@ -129,6 +157,22 @@ function collapseColumns(board: BoardCell[][]) {
       board[row][col] = randomPieceId();
     }
   }
+}
+
+export function clearMatches(board: Board, matches: Position[]): BoardCell[][] {
+  const nextBoard = cloneBoard(board);
+
+  matches.forEach(({ row, col }) => {
+    nextBoard[row][col] = null;
+  });
+
+  return nextBoard;
+}
+
+export function collapseAndRefill(board: BoardCell[][]): Board {
+  const nextBoard = cloneBoard(board);
+  collapseColumns(nextBoard);
+  return nextBoard as Board;
 }
 
 export function resolveBoard(board: Board): {
@@ -195,4 +239,3 @@ export function performSwap(board: Board, first: Position, second: Position): Sw
     cascades: resolved.cascades
   };
 }
-
