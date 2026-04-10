@@ -429,14 +429,142 @@ select {
   user-select: none;
 }
 
-.game-art-image {
+.lapin-character {
+  /* Lapin motion tuning */
+  --lapin-breath-duration: 5400ms;
+  --lapin-breath-scale-amount: 0.012;
+  --lapin-float-duration: 6800ms;
+  --lapin-float-distance: 8px;
+  --lapin-ear-duration: 6200ms;
+  --lapin-ear-rotate-amount: 1.2deg;
+  --lapin-ear-shift-x: 1.4px;
+  --lapin-ear-shift-y: 1.2px;
+  --lapin-smile-fade-duration: 720ms;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  overflow: visible;
+}
+
+.lapin-character__float,
+.lapin-character__breath,
+.lapin-character__scene,
+.lapin-character__layer,
+.lapin-character__expression,
+.lapin-character__feature {
+  position: absolute;
+  inset: 0;
+}
+
+.lapin-character__float {
+  animation: lapin-float var(--lapin-float-duration) ease-in-out infinite;
+}
+
+.lapin-character__breath {
+  animation: lapin-breathe var(--lapin-breath-duration) ease-in-out infinite;
+  transform-origin: 68% 64%;
+}
+
+.lapin-character__image {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
   object-fit: contain;
   filter:
     drop-shadow(0 16px 24px rgba(255, 232, 176, 0.28))
     drop-shadow(0 16px 36px rgba(88, 74, 124, 0.1));
+  user-select: none;
+  pointer-events: none;
+}
+
+.lapin-character__layer--ear {
+  opacity: 0.92;
+  animation: lapin-ear-sway var(--lapin-ear-duration) ease-in-out infinite;
+}
+
+.lapin-character__layer--ear-left {
+  clip-path: ellipse(8% 18% at 57.3% 30%);
+  transform-origin: 58% 42%;
+}
+
+.lapin-character__layer--ear-right {
+  clip-path: ellipse(8.6% 17.2% at 78.5% 29.4%);
+  transform-origin: 74% 42%;
+  animation-delay: -3100ms;
+}
+
+.lapin-character__feature--smile {
+  opacity: 0;
+  transform: translateY(1.5px) scale(0.985);
+  transition:
+    opacity var(--lapin-smile-fade-duration) ease,
+    transform var(--lapin-smile-fade-duration) ease;
+}
+
+.lapin-character[data-smiling='true'] .lapin-character__feature--smile {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.lapin-character__feature--left-eye {
+  clip-path: ellipse(4.8% 5.6% at 58.8% 47.4%);
+}
+
+.lapin-character__feature--right-eye {
+  clip-path: ellipse(4.8% 5.8% at 70.2% 52.4%);
+  transition-delay: 40ms;
+}
+
+.lapin-character__feature--mouth {
+  clip-path: ellipse(5.6% 6% at 64.2% 57.1%);
+  transition-delay: 80ms;
+}
+
+@keyframes lapin-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(calc(var(--lapin-float-distance) * -1));
+  }
+}
+
+@keyframes lapin-breathe {
+  0%,
+  100% {
+    transform: scale(calc(1 - var(--lapin-breath-scale-amount)));
+  }
+
+  50% {
+    transform: scale(calc(1 + var(--lapin-breath-scale-amount)));
+  }
+}
+
+@keyframes lapin-ear-sway {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(calc(var(--lapin-ear-rotate-amount) * -0.4));
+  }
+
+  50% {
+    transform: translate(var(--lapin-ear-shift-x), calc(var(--lapin-ear-shift-y) * -1))
+      rotate(var(--lapin-ear-rotate-amount));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lapin-character__float,
+  .lapin-character__breath,
+  .lapin-character__layer--ear {
+    animation: none;
+  }
+
+  .lapin-character__feature--smile {
+    transition-duration: 120ms;
+    transform: none;
+  }
 }
 
 .board-stage {

@@ -1,8 +1,8 @@
 import { createBoardView, type BoardAnimationState } from '../components/BoardView';
 import { createButton } from '../components/Button';
+import { createLapinCharacter } from '../components/LapinCharacter';
 import { createScreenShell } from '../components/ScreenShell';
 import { PRE_GAME_MESSAGE } from '../content/story';
-import lapinCornerImage from '../assets/characters/lapin/lapin-corner-ui.png';
 import { PIECE_ASSETS, PIECE_ASSET_MAP, PIECE_IDS, type PieceId } from '../assets/pieces';
 import {
   clearMatches,
@@ -48,9 +48,23 @@ const COMBO_COLORS = [
   { color: '#ff7eb3', glow: 'rgba(255, 126, 179, 0.6)' }
 ];
 
+const COMBO_VOICES: Record<number, string> = {
+  2: '/assets/audio/Bien.mp3',
+  3: '/assets/audio/Tr%C3%A8s%20bien.mp3',
+  4: '/assets/audio/Magnifique.mp3',
+  5: '/assets/audio/Splendide.mp3',
+  6: '/assets/audio/Merveilleux.mp3'
+};
+
 function showComboOverlay(cascades: number) {
   const text = cascades >= 7 ? 'Parfait !' : COMBO_LABELS[cascades];
   if (!text) return;
+
+  const voiceSrc = cascades >= 7 ? COMBO_VOICES[6] : COMBO_VOICES[cascades];
+  if (voiceSrc) {
+    const voice = new Audio(voiceSrc);
+    voice.play().catch(() => {});
+  }
 
   const { color, glow } = COMBO_COLORS[Math.min(cascades - 2, COMBO_COLORS.length - 1)];
 
@@ -163,13 +177,9 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
   const artFrame = document.createElement('div');
   artFrame.className = 'game-art-frame';
 
-  const artImage = document.createElement('img');
-  artImage.className = 'game-art-image';
-  artImage.src = lapinCornerImage;
-  artImage.alt = '';
-  artImage.decoding = 'async';
+  const lapinCharacter = createLapinCharacter();
 
-  artFrame.append(artImage);
+  artFrame.append(lapinCharacter.element);
   artRail.append(scoreboard, artFrame);
 
   // BGM
@@ -189,7 +199,7 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
   const fadeIn = () => {
     clearFader();
     bgm.volume = 0;
-    bgm.play().catch(() => {});
+    bgm.play().catch(() => { });
     faderId = window.setInterval(() => {
       bgm.volume = Math.min(bgm.volume + 0.02, 0.7);
       if (bgm.volume >= 0.7) clearFader();
@@ -234,7 +244,7 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
 
     if (positions.length > 0) {
       const rushSe = new Audio('/assets/se/lapin_glitter_stream_then_score_chime.wav');
-      rushSe.play().catch(() => {});
+      rushSe.play().catch(() => { });
     }
 
     positions.forEach((pos, index) => {
@@ -287,6 +297,7 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     viewState.selectedPosition = null;
     viewState.starsCollected = 0;
     viewState.moveCount = 0;
+    lapinCharacter.setSmiling(false);
     PIECE_IDS.forEach(id => { viewState.clearedByPiece[id] = 0; });
     document.querySelectorAll('.collect-shard').forEach(el => el.remove());
     refresh();
@@ -302,7 +313,7 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     viewState.selectedPosition = null;
 
     const swapSe = new Audio('/assets/se/lapin_swap_dreamy_pop.wav');
-    swapSe.play().catch(() => {});
+    swapSe.play().catch(() => { });
 
     const swappedBoard = swapPositions(board, start, target);
     const initialGroups = findMatchGroups(swappedBoard);
@@ -331,6 +342,7 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     }
 
     board = swappedBoard;
+    lapinCharacter.pulseSmile(MATCH_PAUSE_MS + 900);
     let workingBoard = swappedBoard;
     let groups = initialGroups;
     let cleared = 0;
@@ -345,7 +357,7 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
         groups
       };
       const matchSe = new Audio('/assets/se/lapin_one_match.wav');
-      matchSe.play().catch(() => {});
+      matchSe.play().catch(() => { });
       refresh();
       launchCollectShards(matchedPositions, workingBoard);
       await wait(MATCH_PAUSE_MS);
@@ -377,6 +389,7 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     isAnimating = false;
 
     if (cascades >= 2) {
+      lapinCharacter.pulseSmile(2200);
       showComboOverlay(cascades);
     }
 
@@ -420,7 +433,10 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
       createButton({
         label: 'Back to Title',
         kind: 'secondary',
-        onClick: () => fadeOut(onBackToTitle)
+        onClick: () => {
+          lapinCharacter.destroy();
+          fadeOut(onBackToTitle);
+        }
       })
     ]
   });
