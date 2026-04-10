@@ -22,7 +22,6 @@ interface GameViewState {
   selectedPosition: Position | null;
   starsCollected: number;
   moveCount: number;
-  statusText: string;
   clearedByPiece: Record<PieceId, number>;
 }
 
@@ -101,7 +100,6 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     selectedPosition: null,
     starsCollected: 0,
     moveCount: 0,
-    statusText: 'Press and drag a piece toward a neighboring tile to swap.',
     clearedByPiece: Object.fromEntries(PIECE_IDS.map(id => [id, 0])) as Record<PieceId, number>
   };
 
@@ -129,12 +127,6 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
 
   stats.append(starsStat, movesStat);
 
-  const hint = document.createElement('p');
-  hint.className = 'hint-text';
-  hint.textContent = 'Press and drag a piece toward a neighboring tile to swap.';
-
-  const status = document.createElement('p');
-  status.className = 'status-text';
 
   const boardMount = document.createElement('div');
   boardMount.className = 'game-board-mount';
@@ -215,8 +207,6 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
   const refresh = () => {
     starsStat.textContent = `Stars collected: ${viewState.starsCollected}`;
     movesStat.textContent = `Moves: ${viewState.moveCount}`;
-    status.textContent = viewState.statusText;
-
     scoreItems.forEach(({ pieceId, countEl }) => {
       countEl.textContent = String(viewState.clearedByPiece[pieceId] ?? 0);
     });
@@ -288,7 +278,6 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     viewState.selectedPosition = null;
     viewState.starsCollected = 0;
     viewState.moveCount = 0;
-    viewState.statusText = 'Fresh board ready. Help Lapin collect stars.';
     PIECE_IDS.forEach(id => { viewState.clearedByPiece[id] = 0; });
     document.querySelectorAll('.collect-shard').forEach(el => el.remove());
     refresh();
@@ -311,10 +300,6 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
       first: start,
       second: target
     };
-    viewState.statusText =
-      initialGroups.length > 0
-        ? "Swap complete. Let's check the match."
-        : 'That swap did not make a match, so it glides back.';
     refresh();
     await wait(SWAP_FORWARD_MS);
 
@@ -329,7 +314,6 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
 
       animationState = { kind: 'idle' };
       isAnimating = false;
-      viewState.statusText = 'Press and drag a piece toward a neighboring tile to swap.';
       refresh();
       return;
     }
@@ -348,10 +332,6 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
         kind: 'match-pause',
         groups
       };
-      viewState.statusText =
-        cascades === 1
-          ? 'Match found. The stars pause for a moment...'
-          : `Cascade ${cascades}. Another match is ready to clear.`;
       refresh();
       launchCollectShards(matchedPositions, workingBoard);
       await wait(MATCH_PAUSE_MS);
@@ -360,8 +340,6 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
         kind: 'clearing',
         groups
       };
-      viewState.statusText =
-        cascades === 1 ? 'The matched stars are clearing.' : `Cascade ${cascades} is clearing.`;
       refresh();
       await wait(getClearingSweepDuration(groups));
 
@@ -373,7 +351,6 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
         kind: 'refill',
         fallTargets: refillResult.fallTargets
       };
-      viewState.statusText = 'New pieces fall into place.';
       refresh();
       await wait(getRefillAnimationDuration(refillResult.fallTargets));
 
@@ -382,10 +359,6 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     }
 
     viewState.starsCollected += cleared;
-    viewState.statusText =
-      cascades > 1
-        ? `Nice! You collected ${cleared} stars across ${cascades} cascades.`
-        : `Nice! You collected ${cleared} stars.`;
     animationState = { kind: 'idle' };
     isAnimating = false;
 
@@ -406,8 +379,6 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     }
 
     viewState.selectedPosition = position;
-    viewState.statusText = 'Great. Hold it and drag toward a neighboring tile.';
-    status.textContent = viewState.statusText;
   };
 
   const handleDragEnd = () => {
@@ -416,11 +387,9 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     }
 
     viewState.selectedPosition = null;
-    viewState.statusText = 'Press and drag a piece toward a neighboring tile to swap.';
-    status.textContent = viewState.statusText;
   };
 
-  mainColumn.append(missionCard, stats, hint, status, boardMount);
+  mainColumn.append(missionCard, stats, boardMount);
   layout.append(mainColumn, artRail);
   body.append(layout);
 
