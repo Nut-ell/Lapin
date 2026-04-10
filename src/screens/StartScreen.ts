@@ -3,9 +3,10 @@ import { createScreenShell } from '../components/ScreenShell';
 
 interface StartScreenOptions {
   onStart: () => void;
+  onStory?: () => void;
 }
 
-export function createStartScreen({ onStart }: StartScreenOptions): HTMLElement {
+export function createStartScreen({ onStart, onStory }: StartScreenOptions): HTMLElement {
   const body = document.createElement('div');
   body.className = 'message-block';
 
@@ -13,15 +14,18 @@ export function createStartScreen({ onStart }: StartScreenOptions): HTMLElement 
   copy.textContent = 'A simple web-first match-3 adventure for Lapin.';
   body.append(copy);
 
+  const actions = [
+    createButton({ label: 'Start', onClick: onStart })
+  ];
+
+  if (onStory) {
+    actions.push(createButton({ label: 'Story', kind: 'secondary', onClick: onStory }));
+  }
+
   return createScreenShell({
     title: 'Lapin',
     body,
-    actions: [
-      createButton({
-        label: 'Start',
-        onClick: onStart
-      })
-    ]
+    actions
   });
 }
 

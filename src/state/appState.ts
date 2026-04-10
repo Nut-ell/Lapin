@@ -1,6 +1,6 @@
 import type { ProgressState } from '../storage/progressStorage';
 
-export type AppScreen = 'start' | 'intro' | 'pregame' | 'game';
+export type AppScreen = 'start' | 'intro' | 'intro-replay' | 'pregame' | 'game';
 
 export interface AppState {
   currentScreen: AppScreen;

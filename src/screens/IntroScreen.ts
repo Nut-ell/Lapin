@@ -18,7 +18,6 @@ export function createIntroScreen({ onContinue }: IntroScreenOptions): HTMLEleme
 
   return createScreenShell({
     title: 'Lapin Story',
-    description: 'First launch only',
     body,
     actions: [
       createButton({

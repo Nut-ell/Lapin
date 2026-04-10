@@ -54,6 +54,10 @@ export class App {
     this.setScreen('pregame');
   };
 
+  private handleStory = () => {
+    this.setScreen('intro-replay');
+  };
+
   private handlePreGameContinue = () => {
     this.setScreen('game');
   };
@@ -73,6 +77,10 @@ export class App {
         return createIntroScreen({
           onContinue: this.handleIntroContinue
         });
+      case 'intro-replay':
+        return createIntroScreen({
+          onContinue: this.handleBackToTitle
+        });
       case 'pregame':
         return createPreGameScreen({
           onContinue: this.handlePreGameContinue
@@ -84,7 +92,8 @@ export class App {
       case 'start':
       default:
         return createStartScreen({
-          onStart: this.handleStart
+          onStart: this.handleStart,
+          onStory: this.state.progress.introSeen ? this.handleStory : undefined
         });
     }
   }
