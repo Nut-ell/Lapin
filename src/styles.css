@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Fredoka:wght@400;500;600&display=swap');
 
 :root {
   color-scheme: light;
@@ -81,6 +81,16 @@ select {
   font-size: clamp(2rem, 5vw, 3.5rem);
   line-height: 1;
   letter-spacing: -0.04em;
+}
+
+.screen-card-game .screen-title {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  background: linear-gradient(125deg, #f472b6 0%, #a78bfa 45%, #67e8f9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .screen-description {
@@ -166,6 +176,15 @@ select {
   background: #fff7ee;
   border: 1px solid rgba(244, 196, 83, 0.22);
   font-weight: 600;
+}
+
+.screen-card-game .info-card {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 500;
+  font-size: 1.08rem;
+  background: linear-gradient(135deg, rgba(255, 242, 252, 0.88) 0%, rgba(242, 235, 255, 0.88) 100%);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  color: #a855f7;
 }
 
 .game-stats {
