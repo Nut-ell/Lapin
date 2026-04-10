@@ -176,6 +176,42 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
   artFrame.append(artImage);
   artRail.append(scoreboard, artFrame);
 
+  // BGM
+  const bgm = new Audio('/assets/bgm.mp3');
+  bgm.loop = true;
+  bgm.volume = 0;
+
+  let faderId: number | null = null;
+
+  const clearFader = () => {
+    if (faderId !== null) {
+      window.clearInterval(faderId);
+      faderId = null;
+    }
+  };
+
+  const fadeIn = () => {
+    clearFader();
+    bgm.volume = 0;
+    bgm.play().catch(() => {});
+    faderId = window.setInterval(() => {
+      bgm.volume = Math.min(bgm.volume + 0.02, 0.7);
+      if (bgm.volume >= 0.7) clearFader();
+    }, 50);
+  };
+
+  const fadeOut = (onDone: () => void) => {
+    clearFader();
+    faderId = window.setInterval(() => {
+      bgm.volume = Math.max(bgm.volume - 0.04, 0);
+      if (bgm.volume <= 0) {
+        bgm.pause();
+        clearFader();
+        onDone();
+      }
+    }, 40);
+  };
+
   const refresh = () => {
     starsStat.textContent = `Stars collected: ${viewState.starsCollected}`;
     movesStat.textContent = `Moves: ${viewState.moveCount}`;
@@ -401,12 +437,13 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
       createButton({
         label: 'Back to Title',
         kind: 'secondary',
-        onClick: onBackToTitle
+        onClick: () => fadeOut(onBackToTitle)
       })
     ]
   });
   screen.classList.add('screen-card-game');
 
   refresh();
+  fadeIn();
   return screen;
 }
