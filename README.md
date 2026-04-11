@@ -1,19 +1,26 @@
-# Lapin
+Lapin is a cozy match-3 puzzle game with a soft and dreamy atmosphere.  
+Join Lapin, a bunny born from marshmallows, and collect stars as you progress through the stages.
 
-A browser-based match-3 puzzle game featuring Lapin, a rabbit born from marshmallow who needs your help collecting stars to return to Marshmallow Planet.
+## What kind of game is it?
+- A match-3 puzzle game played on a 6×6 board
+- Swap pieces to line up 3 or more of the same color and clear them
+- Chains and combos feel satisfying
+- Cute visuals with a light story element (more planned in the future)
 
-Match gems on a 6×6 board, chain combos, and clear each stage alongside Lapin's story.
 
-
+## Screenshots
 <img width="782" height="778" alt="image" src="https://github.com/user-attachments/assets/6f52cef6-321f-4412-8b41-a6b53d8a5fa0" />
 
 
-## Play
+## How to play
+Simply swap adjacent pieces to match 3 or more of the same color.  
+When combos chain together, clearing them all at once feels especially satisfying.
 
+
+## Run locally
 ```bash
 npm install
 npm run dev
-```
 
 Open http://localhost:5173 in your browser.
 
