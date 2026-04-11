@@ -342,7 +342,6 @@ export function createGameScreen({ onBackToTitle }: GameScreenOptions): HTMLElem
     }
 
     board = swappedBoard;
-    lapinCharacter.pulseSmile(MATCH_PAUSE_MS + 900);
     let workingBoard = swappedBoard;
     let groups = initialGroups;
     let cleared = 0;

@@ -1,5 +1,7 @@
 import neutralLapinImage from '../assets/characters/lapin/lapin-neutral-dream.png';
-import smilingLapinImage from '../assets/characters/lapin/lapin-smile-reference.png';
+import smilingLapinLeftEyeOverlay from '../assets/characters/lapin/lapin-smile-eye-left-overlay.png';
+import smilingLapinRightEyeOverlay from '../assets/characters/lapin/lapin-smile-eye-right-overlay.png';
+import smilingLapinMouthOverlay from '../assets/characters/lapin/lapin-smile-mouth-overlay.png';
 
 interface LapinLayerConfig {
   className: string;
@@ -24,20 +26,25 @@ const EAR_LAYER_CONFIGS: LapinLayerConfig[] = [
   }
 ];
 
+const TAIL_LAYER_CONFIG: LapinLayerConfig = {
+  className: 'lapin-character__layer lapin-character__layer--tail',
+  source: neutralLapinImage
+};
+
 const SMILE_LAYER_CONFIGS: LapinLayerConfig[] = [
   {
     className:
       'lapin-character__feature lapin-character__feature--smile lapin-character__feature--left-eye',
-    source: smilingLapinImage
+    source: smilingLapinLeftEyeOverlay
   },
   {
     className:
       'lapin-character__feature lapin-character__feature--smile lapin-character__feature--right-eye',
-    source: smilingLapinImage
+    source: smilingLapinRightEyeOverlay
   },
   {
     className: 'lapin-character__feature lapin-character__feature--smile lapin-character__feature--mouth',
-    source: smilingLapinImage
+    source: smilingLapinMouthOverlay
   }
 ];
 
@@ -80,7 +87,12 @@ export function createLapinCharacter(): LapinCharacterHandle {
   expressionLayer.className = 'lapin-character__expression';
   expressionLayer.append(...SMILE_LAYER_CONFIGS.map(createImageLayer));
 
-  scene.append(baseLayer, ...EAR_LAYER_CONFIGS.map(createImageLayer), expressionLayer);
+  scene.append(
+    baseLayer,
+    ...EAR_LAYER_CONFIGS.map(createImageLayer),
+    createImageLayer(TAIL_LAYER_CONFIG),
+    expressionLayer
+  );
   breathLayer.append(scene);
   floatLayer.append(breathLayer);
   root.append(floatLayer);

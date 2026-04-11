@@ -1,52 +1,46 @@
 # Lapin
 
-Lapin is a web-first match-3 scaffold built with Vite + TypeScript and plain DOM modules.
+A browser-based match-3 puzzle game featuring Lapin, a rabbit born from marshmallow who needs your help collecting stars to return to Marshmallow Planet.
 
-## Why this stack
+Match gems on a 6×6 board, chain combos, and clear each stage alongside Lapin's story.
 
-- `Vite`: fast local development, simple build output, easy to wrap later with Capacitor for Android/APK work.
-- `TypeScript`: keeps the board logic and screen flow readable as the project grows.
-- No UI framework yet: fewer moving parts, cleaner starter code, and easier to reshape once the real content and art direction are ready.
-
-## Commands
+## Play
 
 ```bash
 npm install
 npm run dev
 ```
 
-To create a production build:
+Open http://localhost:5173 in your browser.
+
+## Build
 
 ```bash
 npm run build
+# open dist/index.html directly, or serve the dist/ folder
 ```
+
+## Stack
+
+- **Vite + TypeScript** — no UI framework, plain DOM modules
+- Designed as a standard web app so it can be wrapped with Capacitor for Android later without rewriting
 
 ## Folder structure
 
 ```text
-public/
-  assets/
-    characters/    future Lapin character art
-    pieces/        optional public fallback images if you want URL-based assets later
-    story/         future story visuals
 src/
-  assets/          puzzle piece asset imports and runtime manifest
-  components/      shared UI pieces
-  content/         text content such as intro lines and mission copy
-  game/            match-3 board logic
-  screens/         start, intro, message, and game screens
-  state/           lightweight app state definitions
-  storage/         localStorage persistence
+  assets/      gem pieces (SVG) and character images
+  components/  shared UI elements
+  content/     story lines and mission text
+  game/        match-3 board logic
+  screens/     game screens (intro, pre-game, board)
+  storage/     localStorage save data
 ```
 
-## Where to edit things later
+## Customization
 
-- Intro story lines: `src/content/story.ts`
-- Pre-game mission text: `src/content/story.ts`
-- Match-3 logic: `src/game/board.ts`
-- Puzzle piece asset mapping: `src/assets/pieces.ts`
-- Real puzzle piece image files now used by the game: `src/assets/pieces/`
-
-## Notes for later APK support
-
-This project is intentionally a standard Vite web app. That keeps the web version simple now and makes it straightforward to add a wrapper like Capacitor later without rewriting the game structure.
+| What | Where |
+|------|-------|
+| Story / intro lines | `src/content/story.ts` |
+| Board size, match rules | `src/game/constants.ts` |
+| Gem assets | `src/assets/pieces/` |
