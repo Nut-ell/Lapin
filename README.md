@@ -22,30 +22,4 @@ When combos chain together, clearing them all at once feels especially satisfyin
 npm install
 npm run dev
 
-Open http://localhost:5173 in your browser.
 
-
-## Stack
-
-- **Vite + TypeScript** — no UI framework, plain DOM modules
-- Designed as a standard web app so it can be wrapped with Capacitor for Android later without rewriting
-
-## Folder structure
-
-```text
-src/
-  assets/      gem pieces (SVG) and character images
-  components/  shared UI elements
-  content/     story lines and mission text
-  game/        match-3 board logic
-  screens/     game screens (intro, pre-game, board)
-  storage/     localStorage save data
-```
-
-## Customization
-
-| What | Where |
-|------|-------|
-| Story / intro lines | `src/content/story.ts` |
-| Board size, match rules | `src/game/constants.ts` |
-| Gem assets | `src/assets/pieces/` |
