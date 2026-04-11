@@ -24,12 +24,6 @@ npm run dev
 
 Open http://localhost:5173 in your browser.
 
-## Build
-
-```bash
-npm run build
-# open dist/index.html directly, or serve the dist/ folder
-```
 
 ## Stack
 
