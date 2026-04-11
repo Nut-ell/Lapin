@@ -4,6 +4,10 @@ A browser-based match-3 puzzle game featuring Lapin, a rabbit born from marshmal
 
 Match gems on a 6×6 board, chain combos, and clear each stage alongside Lapin's story.
 
+
+<img width="782" height="778" alt="image" src="https://github.com/user-attachments/assets/6f52cef6-321f-4412-8b41-a6b53d8a5fa0" />
+
+
 ## Play
 
 ```bash
