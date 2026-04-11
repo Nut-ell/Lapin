@@ -18,9 +18,10 @@ When combos chain together, clearing them all at once feels especially satisfyin
 
 
 ## Run locally
+
 ```bash
 npm install
 npm run dev
+```
 
-##
-Then open the local URL shown in the terminal (usually http://localhost:5173) in your browser.
+Then open the local URL shown in the terminal (usually `http://localhost:5173`) in your browser.
